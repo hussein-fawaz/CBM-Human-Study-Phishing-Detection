@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Protocol for a human study on concept bottleneck models for phishing detection: can people catch an AI's mistakes when they see its concepts?">
+<title>Concept Explanation Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&display=swap">
+<style>
+/* Layout: one reading column. Protocol order: why -> session -> arms -> take the study (interactive) -> email pool -> who -> sample size (interactive) -> analysis -> ethics. Same visual system as the CEAS Concept Dataset page. */
+:root {
+  --bg: #f7f7f5; --surface: #ffffff; --ink: #141413; --ink-2: #4e4d49; --ink-3: #807e77; --line: #e3e2dd; --grid: #eeede8;
+  --legit: #1baf7a; --phish: #eb6834; --accent: #184f95; --accent-soft: #e6eef8; --warn: #9a6b00; --warn-soft: #fbf3df;
+  --display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --c0: #2a78d6; --c1: #12946a; --c2: #d63c3b; --c3: #7c4dea; --c4: #c26a00; --c5: #0b8fa3; --c6: #c93b84; --c7: #5f7317;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121211; --surface: #1a1a19; --ink: #f4f3ee; --ink-2: #c3c2b7; --ink-3: #8f8d85; --line: #2e2e2b; --grid: #262624;
+  --legit: #199e70; --phish: #d95926; --accent: #6da7ec; --accent-soft: #1d2a3a; --warn: #e0a526; --warn-soft: #2e2716; --c0: #6aa6f2; --c1: #45c99a; --c2: #f07a79; --c3: #a98bf5; --c4: #f0a43c; --c5: #45c3d6; --c6: #ec7ab5; --c7: #a8bf52; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121211; --surface: #1a1a19; --ink: #f4f3ee; --ink-2: #c3c2b7; --ink-3: #8f8d85; --line: #2e2e2b; --grid: #262624;
+  --legit: #199e70; --phish: #d95926; --accent: #6da7ec; --accent-soft: #1d2a3a; --warn: #e0a526; --warn-soft: #2e2716; --c0: #6aa6f2; --c1: #45c99a; --c2: #f07a79; --c3: #a98bf5; --c4: #f0a43c; --c5: #45c3d6; --c6: #ec7ab5; --c7: #a8bf52; color-scheme: dark; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); margin: 0; }
+main { max-width: 1100px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 72px; display: grid; gap: 48px; }
+header { display: grid; gap: 10px; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+h1 { font: 650 clamp(28px, 4vw, 40px)/1.12 var(--display); margin: 0; text-wrap: balance; max-width: 26ch; }
+h2 { font: 650 22px/1.25 var(--display); margin: 0; text-wrap: balance; }
+h3 { font: 600 15px/1.3 var(--body); margin: 0; }
+p { margin: 0; }
+.lede { color: var(--ink-2); max-width: 70ch; }
+.claim { color: var(--ink-2); max-width: 72ch; }
+section { display: grid; gap: 16px; min-width: 0; scroll-margin-top: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
+.scroll { overflow-x: auto; }
+.note { color: var(--ink-3); font-size: 12.5px; max-width: 80ch; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.stat { background: var(--surface); padding: 14px 16px; display: grid; gap: 2px; }
+.stat b { font: 500 24px/1.15 var(--mono); font-variant-numeric: tabular-nums; }
+.stat span { color: var(--ink-2); font-size: 13px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th { text-align: left; font: 500 11px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+code { font: 500 12px var(--mono); }
+.pill { display: inline-block; font: 500 11px/1 var(--mono); padding: 4px 7px; border-radius: 4px; white-space: nowrap; }
+.pill.legit { background: color-mix(in srgb, var(--legit) 16%, transparent); color: var(--legit); }
+.pill.phish { background: color-mix(in srgb, var(--phish) 16%, transparent); color: var(--phish); }
+.pill.err { background: var(--warn-soft); color: var(--warn); }
+.pill.done { background: color-mix(in srgb, var(--legit) 16%, transparent); color: var(--legit); }
+.pill.todo { background: var(--grid); color: var(--ink-2); }
+.pill.fix { background: var(--warn-soft); color: var(--warn); }
+.chip { font: 500 11px/1 var(--mono); padding: 4px 6px; border-radius: 4px; background: var(--grid); color: var(--ink); display: inline-block; margin: 0 4px 4px 0; }
+button { font: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, tr:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { background: var(--accent); color: var(--bg); border: 0; border-radius: 8px; padding: 9px 16px; font-weight: 500; cursor: pointer; }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { font: 500 12px/1 var(--mono); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.rqs { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.rq { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 8px; align-content: start; }
+.rq.primary { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.rq .tag { font: 500 11px/1 var(--mono); letter-spacing: .06em; color: var(--ink-3); }
+.rq.primary .tag { color: var(--accent); }
+.rq p { color: var(--ink-2); font-size: 14px; }
+.rq .h { font-size: 13px; color: var(--ink); border-top: 1px solid var(--grid); padding-top: 8px; }
+.flow { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 8px; }
+.step { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 12px; display: grid; gap: 4px; align-content: start; cursor: pointer; color: var(--ink); }
+.step:hover { border-color: var(--accent); }
+.step .n { font: 500 11px/1 var(--mono); color: var(--ink-3); }
+.step b { font-size: 14px; }
+.step span { color: var(--ink-2); font-size: 12.5px; }
+.step.loop { border-color: var(--accent); background: var(--accent-soft); }
+tr.armrow, tr.poolrow { cursor: pointer; }
+tr.armrow:hover td, tr.poolrow:hover td { background: var(--grid); }
+tr.armrow[aria-selected="true"] td, tr.poolrow[aria-selected="true"] td { background: var(--accent-soft); }
+.wt { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (max-width: 820px) { .wt { grid-template-columns: 1fr; } }
+.wt-nav { display: grid; gap: 4px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 820px) { .wt-nav { position: static; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+.wt-nav button { text-align: left; border: 1px solid transparent; background: transparent; border-radius: 8px; padding: 7px 10px; cursor: pointer; color: var(--ink-2); font-size: 13.5px; display: flex; gap: 8px; align-items: center; }
+.wt-nav button[aria-current="step"] { background: var(--surface); border-color: var(--line); color: var(--ink); font-weight: 600; }
+.wt-nav .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); flex: none; }
+.wt-nav .dot.ok { background: var(--legit); }
+.screen { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.screen-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
+.measures { font: 500 11px/1.4 var(--mono); color: var(--ink-3); }
+.qitem { display: grid; gap: 8px; padding-block: 4px; }
+.qid { font: 500 11px var(--mono); color: var(--ink-3); margin-right: 6px; }
+.req { color: var(--phish); }
+.opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.opts label { border: 1px solid var(--line); border-radius: 8px; padding: 6px 11px; cursor: pointer; font-size: 13.5px; display: inline-flex; gap: 6px; align-items: center; background: var(--surface); }
+.opts label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.likert { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
+.likert label { text-align: center; font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 2px; cursor: pointer; display: grid; gap: 2px; justify-items: center; }
+.likert label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+select, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px; max-width: 100%; }
+textarea { width: 100%; min-height: 64px; }
+.consent-box { display: flex; gap: 8px; align-items: flex-start; }
+.email { white-space: pre-wrap; overflow-wrap: anywhere; font: 12.5px/1.5 var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; max-height: 300px; overflow: auto; }
+.email mark { background: var(--warn-soft); color: inherit; border-radius: 3px; padding: 0 2px; }
+.ai { background: var(--bg); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 8px; padding: 12px; display: grid; gap: 8px; font-size: 13.5px; min-width: 0; }
+.verdict { font-weight: 600; padding: 5px 9px; border-radius: 6px; display: inline-block; justify-self: start; }
+.verdict.bad { color: var(--phish); background: color-mix(in srgb, var(--phish) 14%, transparent); }
+.verdict.good { color: var(--legit); background: color-mix(in srgb, var(--legit) 14%, transparent); }
+.chk { list-style: none; padding: 0; margin: 0; display: grid; }
+.chk li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: start; border-top: 1px solid var(--grid); padding: 7px 0; font-size: 13px; }
+.chk li.flipped { background: var(--warn-soft); }
+.chk .m { font-weight: 700; text-align: center; }
+.chk .qt { display: block; color: var(--ink-3); font-size: 12px; overflow-wrap: anywhere; }
+.chk button { font: 500 11px/1 var(--mono); padding: 5px 7px; border-radius: 5px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+.wt-foot { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+.callout { background: var(--warn-soft); border-radius: 8px; padding: 10px 12px; font-size: 13px; color: var(--ink); }
+.rec { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.rec div { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 2px; }
+.rec b { font: 500 18px var(--mono); font-variant-numeric: tabular-nums; }
+.rec span { color: var(--ink-2); font-size: 12.5px; }
+pre.json { font: 12px/1.5 var(--mono); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow: auto; max-height: 320px; margin: 0; }
+.calc { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+@media (max-width: 820px) { .calc { grid-template-columns: 1fr; } }
+.slider { display: grid; gap: 4px; }
+.slider label { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; }
+.slider output { font: 500 13px var(--mono); }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+.pow { display: grid; gap: 10px; align-content: start; }
+.powrow { display: grid; grid-template-columns: 150px minmax(0, 1fr) 52px; gap: 10px; align-items: center; font-size: 13.5px; }
+.track { height: 12px; background: var(--grid); border-radius: 0 4px 4px 0; position: relative; }
+.track .fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 0 4px 4px 0; }
+.track .goal { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink-3); left: 80%; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 820px) { .two { grid-template-columns: 1fr; } }
+ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--ink-2); font-size: 14px; }
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+/* CBM explainer: two pipelines, x -> y (black box) and x -> c -> y (CBM) */
+.pipe { display: grid; grid-template-columns: minmax(0, 1.1fr) 34px minmax(0, 1fr) 34px minmax(0, .8fr); gap: 0; align-items: stretch; }
+@media (max-width: 820px) { .pipe { grid-template-columns: 1fr; } .pipe .arrow { transform: rotate(90deg); height: 34px; } }
+.pipe .arrow { display: grid; place-items: center; color: var(--ink-3); font: 500 20px/1 var(--mono); pointer-events: none; }
+.node { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); padding: 12px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.node .lbl { display: flex; justify-content: space-between; gap: 8px; font: 500 11px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.node .lbl b { font: 650 18px/1 var(--display); letter-spacing: 0; text-transform: none; color: var(--ink); }
+.node.black { background: repeating-linear-gradient(135deg, var(--grid) 0 8px, var(--surface) 8px 16px); place-content: center; text-align: center; color: var(--ink-2); }
+.node.c { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.pipe-title { font: 600 14px/1.3 var(--body); display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.pipe-title span { color: var(--ink-3); font-weight: 400; font-size: 13px; }
+.crow { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 12.5px; padding: 4px 6px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; background: transparent; color: var(--ink); text-align: left; width: 100%; }
+.crow:hover { border-color: var(--line); }
+.crow.off { color: var(--ink-3); }
+.crow.changed { background: var(--warn-soft); }
+.crow .w { font: 500 11.5px var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.ylab { display: grid; gap: 6px; }
+.sum { font: 12px/1.6 var(--mono); color: var(--ink-2); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.explain-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.explain-steps div { border-top: 2px solid var(--accent); padding-top: 8px; font-size: 14px; color: var(--ink-2); }
+.explain-steps b { color: var(--ink); }
+
+/* concept <-> phrase linking: the same colour and number on a sign and on its quoted phrase */
+.cm { border-radius: 3px; padding: 0 1px; border-bottom: 2px solid; color: inherit; }
+.cb { display: inline-block; min-width: 1.4em; padding: 0 .3em; border-radius: 1em; color: #fff; font: 600 10.5px/1.5 var(--body); text-align: center; vertical-align: super; margin-left: 1px; }
+.chk .cb { vertical-align: baseline; font-size: 11px; }
+.cm.hl { outline: 2px solid var(--ink); outline-offset: 1px; }
+.cm.c0 { background: color-mix(in srgb, var(--c0) 22%, transparent); border-color: var(--c0); } .cb.c0 { background: var(--c0); }
+.cm.c1 { background: color-mix(in srgb, var(--c1) 22%, transparent); border-color: var(--c1); } .cb.c1 { background: var(--c1); }
+.cm.c2 { background: color-mix(in srgb, var(--c2) 22%, transparent); border-color: var(--c2); } .cb.c2 { background: var(--c2); }
+.cm.c3 { background: color-mix(in srgb, var(--c3) 22%, transparent); border-color: var(--c3); } .cb.c3 { background: var(--c3); }
+.cm.c4 { background: color-mix(in srgb, var(--c4) 22%, transparent); border-color: var(--c4); } .cb.c4 { background: var(--c4); }
+.cm.c5 { background: color-mix(in srgb, var(--c5) 22%, transparent); border-color: var(--c5); } .cb.c5 { background: var(--c5); }
+.cm.c6 { background: color-mix(in srgb, var(--c6) 22%, transparent); border-color: var(--c6); } .cb.c6 { background: var(--c6); }
+.cm.c7 { background: color-mix(in srgb, var(--c7) 22%, transparent); border-color: var(--c7); } .cb.c7 { background: var(--c7); }
+.armbox { display: grid; gap: 8px; border: 1px dashed var(--line); border-radius: 10px; padding: 10px 12px; }
+.armbox .seg button { flex: 1 1 140px; text-align: left; display: grid; gap: 3px; font: 500 12.5px/1.3 var(--body); padding: 9px 11px; }
+.armbox .seg button small { font: 400 11.5px/1.3 var(--body); color: inherit; opacity: .75; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.steps span { font: 500 12px/1 var(--mono); padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-3); }
+.steps span.on { border-color: var(--accent); color: var(--accent); }
+.steps span.done { border-color: var(--legit); color: var(--legit); }
+.cmp { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 820px) { .cmp { grid-template-columns: 1fr; } }
+.cmp > div { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.cmp .lacks { font-size: 12.5px; color: var(--ink-2); border-top: 1px solid var(--grid); padding-top: 8px; }
+</style>
+</head>
+<body>
+
+
+<main>
+  <header>
+    <div class="eyebrow">CBM-SE v3 · Stage 3 · Human study protocol · draft</div>
+    <h1>Can people catch the model's mistakes when they see its concepts?</h1>
+    <p class="lede">An online study for a concept bottleneck model. Each participant judges 2 real emails, before and after seeing an AI assessment. Three groups see the AI in three ways, and one of the two answers is deliberately wrong. The main question is whether showing the concepts behind a decision helps people notice and correct that error.</p>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b>3</b><span>between-subject arms</span></div>
+    <div class="stat"><b>2 + 1</b><span>emails per person, plus 1 practice</span></div>
+    <div class="stat"><b>≤ 10 min</b><span>per session</span></div>
+    <div class="stat"><b id="st-recruit">300</b><span id="st-recruit-l">recruited · 270 analysed</span></div>
+    <div class="stat"><b>40%</b><span>aged 65+ (oversampled)</span></div>
+  </div>
+
+  <section id="cbm">
+    <h2>What is a concept bottleneck model?</h2>
+    <p class="claim">A normal classifier maps an email straight to a label, and nobody can see why. A <b>concept bottleneck model</b> (CBM) has to pass through a middle layer of human-readable <b>concepts</b>: it first decides which warning signs are in the email, then computes the label <i>only</i> from those signs. Because nothing else reaches the label, every decision can be explained by the concepts it used, and a person can correct a concept and see the decision change.</p>
+    <div class="explain-steps">
+      <div><b>x · the email.</b> The raw text, the same input as any classifier.</div>
+      <div><b>c · the concepts.</b> 10 yes/no warning signs predicted from the email, each with a quote as evidence. This is the "bottleneck".</div>
+      <div><b>y · the label.</b> Phishing or legitimate, computed only from c: a weighted sum of the signs that are present.</div>
+    </div>
+    <div class="panel" style="display:grid;gap:18px">
+      <div style="display:grid;gap:8px">
+        <div class="pipe-title">A normal model <span>x → y</span></div>
+        <div class="pipe">
+          <div class="node"><div class="lbl"><span>x · email</span></div><div class="email" id="cbm-x1" style="max-height:150px"></div></div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="node black"><b style="font-size:14px">hidden model</b><span class="note">millions of numbers; no reasons</span></div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="node"><div class="lbl"><span>y · label</span></div><div id="cbm-y1"></div></div>
+        </div>
+      </div>
+      <div style="display:grid;gap:8px">
+        <div class="pipe-title">A concept bottleneck model <span>x → c → y</span></div>
+        <div class="pipe">
+          <div class="node"><div class="lbl"><span>x · email</span></div><div class="email" id="cbm-x2" style="max-height:220px"></div></div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="node c"><div class="lbl"><span>c · concepts</span><span>weight</span></div><div id="cbm-c"></div></div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="node"><div class="lbl"><span>y · label</span></div><div class="ylab" id="cbm-y2"></div></div>
+        </div>
+      </div>
+      <p class="note" id="cbm-note">Try it: click a concept to switch it on or off. The label is recomputed from the concepts alone. Positive weights push toward phishing, negative ones toward legitimate.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>What we want to learn</h2>
+    <p class="claim">People tend to follow an AI even when it is wrong, and explanations that read well can make this worse. A concept bottleneck model exposes checkable intermediate claims ("it asks you for a password: no"), so a person can disagree with one claim and see the verdict change. RQ2 tests whether that helps.</p>
+    <div class="rqs">
+      <div class="rq"><div class="tag">RQ1 · EFFECTIVENESS</div><h3>Does seeing the AI improve accuracy?</h3><p>Accuracy before vs after the AI on the email where the AI is right, in each arm.</p></div>
+      <div class="rq primary"><div class="tag">RQ2 · AI ERRORS · PRIMARY</div><h3>Do concepts help people catch AI mistakes?</h3><p>Whether the participant still labels the planted error correctly after seeing the AI.</p></div>
+      <div class="rq"><div class="tag">RQ3 · RELIANCE</div><h3>Do people rely on the AI the right amount?</h3><p>Over-reliance: right before the AI, wrong after it on the planted error. Under-reliance: disagreeing with a correct AI.</p></div>
+      <div class="rq"><div class="tag">RQ4 · USABILITY &amp; TRUST</div><h3>Is it usable, and does trust change?</h3><p>A 5-item usability scale (0–100), explanation quality, and trust and self-confidence before vs after.</p></div>
+      <div class="rq"><div class="tag">RQ5 · WHO BENEFITS</div><h3>Does it work for everyone?</h3><p>Age (65+ vs younger), gender, technical background, education, past phishing victimisation, prior trust in AI.</p></div>
+      <div class="rq"><div class="tag">RQ6 · CORRECTION IN PRACTICE</div><h3>Do people use "I disagree", and does it work?</h3><p>Concept arm only: how often people flip a concept, whether they flip the one that was wrong, and whether the recalculated verdict is then right.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>One session, step by step</h2>
+    <p class="claim">Every participant goes through the same screens. Only the AI panel differs between arms. Click a step to open it in the walkthrough below.</p>
+    <div class="flow" id="flow"></div>
+  </section>
+
+  <section>
+    <h2>Three ways of showing the AI</h2>
+    <p class="claim">The decision and confidence are identical in all arms for every email, including the planted error. Only the explanation changes. Click a row to use that arm in the walkthrough.</p>
+    <div class="panel scroll">
+      <table>
+        <thead><tr><th>Arm</th><th>What the participant sees</th><th>Model behind it</th><th>Can they correct it?</th></tr></thead>
+        <tbody id="armtable"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="take">
+    <h2>Take the study yourself</h2>
+    <p class="claim">Every screen and every question as participants see them. Answer the questions; Next unlocks once the required ones (marked <span class="req">*</span>) are answered, as in the real app. On the email screens, switch between the three arms to compare what each group sees. The list on the left jumps to any screen; the last screen shows the record the app stores.</p>
+    <div class="wt">
+      <nav class="wt-nav" id="wt-nav" aria-label="Screens"></nav>
+      <div class="screen" id="wt-screen"></div>
+    </div>
+  </section>
+
+  <section id="pool">
+    <h2>The email pool</h2>
+    <p class="claim">8 emails: 3 legitimate and 3 malicious where the AI is right, plus 2 malicious emails where the AI is made to say "legitimate". Each participant gets 1 AI-correct email and 1 planted error, drawn at random, in random order. Click a row to use it in the walkthrough: AI-correct emails become email 1, planted errors become email 2.</p>
+    <div class="panel scroll"><table id="pooltable"></table>
+      <p class="note">Draft pool, built from the v3.3 model; it still shows HIGH_RISK_PRODUCT, which v3.4 retires. Every email is a different campaign, at most 1,200 characters, with link paths masked as <code>/xxxx</code>. Planted errors switch off concepts that really are present in the email (confirmed by the annotation), so a participant can see the claim is false.</p></div>
+  </section>
+
+  <section>
+    <h2>Who takes part</h2>
+    <div class="panel">
+      <ul class="plain">
+        <li>Prolific, adults 18+, fluent in English, desktop or phone.</li>
+        <li><b>Age quota:</b> 40% aged 65+ through Prolific's age filter (older adults are a heavily targeted group).</li>
+        <li><b>Gender:</b> Prolific's balanced-sample option.</li>
+        <li><b>Arm assignment:</b> separate study links per age stratum, each with balanced round-robin over the 3 arms, so age is balanced across arms. Within a session, the 2 emails are drawn from the pool and their order is random.</li>
+        <li><b>Pay:</b> about £1.70 for ≤ 10 minutes (≈ £10/h).</li>
+        <li><b>Exclusions:</b> failed attention check, unfinished session, or total time under one third of the median. Fixed before data collection.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- How many participants: kept for reference, hidden from viewers. -->
+  <section hidden>
+    <h2>How many participants</h2>
+    <p class="claim">The primary outcome is one yes/no per person: did they still label the planted error correctly after seeing the AI? Set the expected rates and the sample size to see the power of each comparison (two-sided, α = 0.025 each because there are two comparisons).</p>
+    <div class="panel calc">
+      <div style="display:grid;gap:14px">
+        <div class="slider"><label for="c-score">Score-only arm catches the error <output id="o-score"></output></label><input type="range" id="c-score" min="5" max="50" step="1" value="15"></div>
+        <div class="slider"><label for="c-post">Black-box arm catches the error <output id="o-post"></output></label><input type="range" id="c-post" min="5" max="60" step="1" value="20"></div>
+        <div class="slider"><label for="c-conc">Concept arm catches the error <output id="o-conc"></output></label><input type="range" id="c-conc" min="5" max="80" step="1" value="40"></div>
+        <div class="slider"><label for="c-n">Completed participants per arm <output id="o-n"></output></label><input type="range" id="c-n" min="20" max="200" step="5" value="90"></div>
+        <div class="slider"><label for="c-ex">Expected exclusions <output id="o-ex"></output></label><input type="range" id="c-ex" min="0" max="25" step="1" value="10"></div>
+      </div>
+      <div class="pow">
+        <div class="powrow"><span>Concept vs score only</span><div class="track"><div class="fill" id="p1"></div><div class="goal"></div></div><b id="p1v" style="font-family:var(--mono)"></b></div>
+        <div class="powrow"><span>Concept vs black box</span><div class="track"><div class="fill" id="p2"></div><div class="goal"></div></div><b id="p2v" style="font-family:var(--mono)"></b></div>
+        <p class="note">Tick = 0.80 power. Normal approximation for two independent proportions.</p>
+        <div class="rec" id="c-out"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Ethics and participant safety</h2>
+    <div class="two">
+      <div class="panel"><ul class="plain">
+        <li>Approval from the SUPSI ethics process before recruitment; informed consent on the first screen.</li>
+        <li>Links are never clickable and their paths are replaced by <code>/xxxx</code>; the consent page asks people not to type or guess them.</li>
+        <li>The emails are from the 2008 CEAS corpus; addresses in them are already anonymised. Some contain adult spam wording; the consent page says so.</li>
+      </ul></div>
+      <div class="panel"><ul class="plain">
+        <li><b>Planned deception:</b> the AI is wrong on purpose on 1 email. The debrief names it, explains why, and says the AI is a research prototype.</li>
+        <li>Responses are anonymous (Prolific ID only, deleted after payment); participants can withdraw at any time and their data is removed.</li>
+        <li>The debrief ends with 3 practical phishing tips, so taking part leaves people safer.</li>
+      </ul></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const D = {"pool": [{"id": "e00", "truth": 0, "planted": false, "planted_off": [], "text": "Subject: Re: [opensuse] laptop recommendation again\n\nOn Saturday 23 February 2008 04:36:43 pm Roger Oberholtzer wrote:\n>\n> Not for me. I use a Sony laptop. There is Sony-specific support in\n> OpenSUSE that detects it is a Sony and loads a few things. With 10.3, I\n> simply installed it and it 'just worked'. Wireless and all. Of course,\n> every model is different, But I would buy a Sony again to use with\n> Linux.\n>\n\nThanks Roger,\n\nThe thing is that for the same price Sony has way better configuration, so if \nI know that stuff will be working (even through some pains) I'll go for that.\n\nThanks!\nSergey\n\n-- \nSergey Mkrtchyan,\nPhD Student @\nDepartment of Physics & Astronomy,\nFaculty of Science, University of Waterloo", "ai": {"score_only": {"decision": 0, "prob": 0.07265220637587332}, "posthoc": {"decision": 0, "prob": 0.07265220637587332, "highlights": ["opensuse", "thanks", "wrote", "use", "university", "sony"]}, "concept": {"decision": 0, "prob": 0.07265220637587332, "explanation": "This email is very likely legitimate. The main reasons: it continues an existing conversation or subscription (\"23 February 2008 04:36:43\"). If you did not expect this email, still avoid clicking its links and check through the sender's official website or app.", "checklist": [{"concept": "URGENCY_OR_THREAT", "plain_present": "pressures you with a deadline or a threatened consequence", "plain_absent": "does not pressure you with deadlines or threats", "present": false, "quote": null, "weight": -1.8445769943015402}, {"concept": "ORG_OR_AUTHORITY_CLAIM", "plain_present": "claims to come from an organization or authority", "plain_absent": "does not claim to speak for an organization", "present": false, "quote": null, "weight": 0.649933145578919}, {"concept": "SENSITIVE_INFO_REQUEST", "plain_present": "asks for passwords, personal data, or payment", "plain_absent": "does not ask for passwords, personal data, or payment", "present": false, "quote": null, "weight": -0.024912052036776003}, {"concept": "ACTION_REQUEST", "plain_present": "asks you to take an action (click, reply, buy, call...)", "plain_absent": "does not ask you to do anything", "present": false, "quote": null, "weight": 0.6649655009436565}, {"concept": "PROMOTIONAL_OFFER", "plain_present": "advertises something or offers a reward", "plain_absent": "does not advertise or offer anything", "present": false, "quote": null, "weight": 0.09147275023730356}, {"concept": "HIGH_RISK_PRODUCT", "plain_present": "is about a product type common in unsolicited bulk email", "plain_absent": "is not about a high-risk product type", "present": false, "quote": null, "weight": 4.52403896920427}, {"concept": "EMOTIONAL_APPEAL", "plain_present": "uses emotionally charged language", "plain_absent": "uses a neutral tone", "present": false, "quote": null, "weight": 0.6559244237218473}, {"concept": "LANGUAGE_ANOMALIES", "plain_present": "contains spelling errors or deliberately distorted words", "plain_absent": "is written in correct language", "present": false, "quote": null, "weight": 0.22616888557514772}, {"concept": "EXPECTED_CONTEXT", "plain_present": "continues an existing conversation or subscription", "plain_absent": "shows no sign of a prior relationship with you", "present": true, "quote": "23 February 2008 04:36:43", "weight": -3.436121599808071}, {"concept": "LINK_PRESENT", "plain_present": "contains a web link", "plain_absent": "contains no web link", "present": false, "quote": null, "weight": -0.516249120518375}], "logit_terms": {"bias": 0.803060862860443, "residual": 0.0, "threshold": -1.3181620904250528}}}}, {"id": "e01", "truth": 0, "planted": false, "planted_off": [], "text": "Subject: Re: [opensuse] ext3 check forced = frustration\n\n-----BEGIN PGP SIGNED MESSAGE-----\nHash: SHA1\n\n\n\nThe Monday 2008-02-18 at 10:03 +0100, Clayton wrote:\n\n> bump into the fsck after X number of boots thing a lot sooner.  If\n> this person is a new user.. new to Linux, they are going to be rather\n> annoyed and frustrated (personal experience through a very heated\n> phone call from a friend who had exactly this problem/experience with\n> his laptop).  Usually (in my experience) a laptop user needs a fast\n> boot up... openSUSE is reasonable most of the time... until ext3 does\n> its fsck.\n\nTell them to use hybernation: the computer awakes almost in seconds, ready \nto use, and no fsck.\n\n- -- \nCheers,\n        Carlos E. R.\n\n-----BEGIN PGP SIGNATURE-----\nVersion: GnuPG v2.0.4-svn0 (GNU/Linux)\n\niD8DBQFHuXjftTMYHG2NR9URAqAgAJ9OBJJ6Z+6VDWzHZMW12vVDYqHLrgCeOTp+\nh9kHmhtVXzJORi48Ri9a/xs=\n=h9mh\n-----END PGP SIGNATURE-----", "ai": {"score_only": {"decision": 0, "prob": 0.09003906846393823}, "posthoc": {"decision": 0, "prob": 0.09003906846393823, "highlights": ["opensuse", "wrote", "linux", "use", "user", "cheers"]}, "concept": {"decision": 0, "prob": 0.09003906846393823, "explanation": "This email is very likely legitimate. The main reasons: it continues an existing conversation or subscription (\"10:03 +0100, Clayton wrote:\"). One sign points the other way: it contains spelling errors or deliberately distorted words. If you did not expect this email, still avoid clicking its links and check through the sender's official website or app.", "checklist": [{"concept": "URGENCY_OR_THREAT", "plain_present": "pressures you with a deadline or a threatened consequence", "plain_absent": "does not pressure you with deadlines or threats", "present": false, "quote": null, "weight": -1.8445769943015402}, {"concept": "ORG_OR_AUTHORITY_CLAIM", "plain_present": "claims to come from an organization or authority", "plain_absent": "does not claim to speak for an organization", "present": false, "quote": null, "weight": 0.649933145578919}, {"concept": "SENSITIVE_INFO_REQUEST", "plain_present": "asks for passwords, personal data, or payment", "plain_absent": "does not ask for passwords, personal data, or payment", "present": false, "quote": null, "weight": -0.024912052036776003}, {"concept": "ACTION_REQUEST", "plain_present": "asks you to take an action (click, reply, buy, call...)", "plain_absent": "does not ask you to do anything", "present": false, "quote": null, "weight": 0.6649655009436565}, {"concept": "PROMOTIONAL_OFFER", "plain_present": "advertises something or offers a reward", "plain_absent": "does not advertise or offer anything", "present": false, "quote": null, "weight": 0.09147275023730356}, {"concept": "HIGH_RISK_PRODUCT", "plain_present": "is about a product type common in unsolicited bulk email", "plain_absent": "is not about a high-risk product type", "present": false, "quote": null, "weight": 4.52403896920427}, {"concept": "EMOTIONAL_APPEAL", "plain_present": "uses emotionally charged language", "plain_absent": "uses a neutral tone", "present": false, "quote": null, "weight": 0.6559244237218473}, {"concept": "LANGUAGE_ANOMALIES", "plain_present": "contains spelling errors or deliberately distorted words", "plain_absent": "is written in correct language", "present": true, "quote": "use, and no fsck.", "weight": 0.22616888557514772}, {"concept": "EXPECTED_CONTEXT", "plain_present": "continues an existing conversation or subscription", "plain_absent": "shows no sign of a prior relationship with you", "present": true, "quote": "10:03 +0100, Clayton wrote:", "weight": -3.436121599808071}, {"concept": "LINK_PRESENT", "plain_present": "contains a web link", "plain_absent": "contains no web link", "present": false, "quote": null, "weight": -0.516249120518375}], "logit_terms": {"bias": 0.803060862860443, "residual": 0.0, "threshold": -1.3181620904250528}}}}, {"id": "e02", "truth": 0, "planted": false, "planted_off": [], "text": "Subject: Re: [Buildbot-devel] isImportant and logging\n\n> So, any way to hook into the logging of Buildbot from within master.cfg?\n\nAh, apparently it is as easy as\n\nfrom twisted.python import log\n\nlog.msg(\"File: %s\" % (f))\n\n\n---\nJohn Bäckstrand", "ai": {"score_only": {"decision": 0, "prob": 0.13288561227085877}, "posthoc": {"decision": 0, "prob": 0.13288561227085877, "highlights": ["log", "python", "buildbot", "file", "master", "john"]}, "concept": {"decision": 0, "prob": 0.13288561227085877, "explanation": "This email is likely legitimate. The main reasons: it continues an existing conversation or subscription (\"Re: [Buildbot-devel]\"). One sign points the other way: it claims to come from an organization or authority. If you did not expect this email, still avoid clicking its links and check through the sender's official website or app.", "checklist": [{"concept": "URGENCY_OR_THREAT", "plain_present": "pressures you with a deadline or a threatened consequence", "plain_absent": "does not pressure you with deadlines or threats", "present": false, "quote": null, "weight": -1.8445769943015402}, {"concept": "ORG_OR_AUTHORITY_CLAIM", "plain_present": "claims to come from an organization or authority", "plain_absent": "does not claim to speak for an organization", "present": true, "quote": "[Buildbot-devel] isImportant", "weight": 0.649933145578919}, {"concept": "SENSITIVE_INFO_REQUEST", "plain_present": "asks for passwords, personal data, or payment", "plain_absent": "does not ask for passwords, personal data, or payment", "present": false, "quote": null, "weight": -0.024912052036776003}, {"concept": "ACTION_REQUEST", "plain_present": "asks you to take an action (click, reply, buy, call...)", "plain_absent": "does not ask you to do anything", "present": false, "quote": null, "weight": 0.6649655009436565}, {"concept": "PROMOTIONAL_OFFER", "plain_present": "advertises something or offers a reward", "plain_absent": "does not advertise or offer anything", "present": false, "quote": null, "weight": 0.09147275023730356}, {"concept": "HIGH_RISK_PRODUCT", "plain_present": "is about a product type common in unsolicited bulk email", "plain_absent": "is not about a high-risk product type", "present": false, "quote": null, "weight": 4.52403896920427}, {"concept": "EMOTIONAL_APPEAL", "plain_present": "uses emotionally charged language", "plain_absent": "uses a neutral tone", "present": false, "quote": null, "weight": 0.6559244237218473}, {"concept": "LANGUAGE_ANOMALIES", "plain_present": "contains spelling errors or deliberately distorted words", "plain_absent": "is written in correct language", "present": false, "quote": null, "weight": 0.22616888557514772}, {"concept": "EXPECTED_CONTEXT", "plain_present": "continues an existing conversation or subscription", "plain_absent": "shows no sign of a prior relationship with you", "present": true, "quote": "Re: [Buildbot-devel]", "weight": -3.436121599808071}, {"concept": "LINK_PRESENT", "plain_present": "contains a web link", "plain_absent": "contains no web link", "present": false, "quote": null, "weight": -0.516249120518375}], "logit_terms": {"bias": 0.803060862860443, "residual": 0.0, "threshold": -1.3181620904250528}}}}, {"id": "e03", "truth": 1, "planted": false, "planted_off": [], "text": "Subject: Research has proven its effectiveness\n\nStudies show increased attraction to opposite sex http://www.millpat.com/xxxx", "ai": {"score_only": {"decision": 1, "prob": 0.9970271988157606}, "posthoc": {"decision": 1, "prob": 0.9970271988157606, "highlights": ["sex", "proven", "increased", "attraction", "opposite", "millpat"]}, "concept": {"decision": 1, "prob": 0.9970271988157606, "explanation": "This email is very likely phishing or harmful spam. The main reasons: it is about a product type common in unsolicited bulk email (\"Studies show increased attraction to opposite sex http://www.millpat.com/\"); it uses emotionally charged language (\"Studies show increased attraction to opposite sex http://www.millpat.com/\"). One sign points the other way: it contains a web link. Do not click its links or reply.", "checklist": [{"concept": "URGENCY_OR_THREAT", "plain_present": "pressures you with a deadline or a threatened consequence", "plain_absent": "does not pressure you with deadlines or threats", "present": false, "quote": null, "weight": -1.8445769943015402}, {"concept": "ORG_OR_AUTHORITY_CLAIM", "plain_present": "claims to come from an organization or authority", "plain_absent": "does not claim to speak for an organization", "present": false, "quote": null, "weight": 0.649933145578919}, {"concept": "SENSITIVE_INFO_REQUEST", "plain_present": "asks for passwords, personal data, or payment", "plain_absent": "does not ask for passwords, personal data, or payment", "present": false, "quote": null, "weight": -0.024912052036776003}, {"concept": "ACTION_REQUEST", "plain_present": "asks you to take an action (click, reply, buy, call...)", "plain_absent": "does not ask you to do anything", "present": false, "quote": null, "weight": 0.6649655009436565}, {"concept": "PROMOTIONAL_OFFER", "plain_present": "advertises something or offers a reward", "plain_absent": "does not advertise or offer anything", "present": false, "quote": null, "weight": 0.09147275023730356}, {"concept": "HIGH_RISK_PRODUCT", "plain_present": "is about a product type common in unsolicited bulk email", "plain_absent": "is not about a high-risk product type", "present": true, "quote": "Studies show increased attraction to opposite sex http://www.millpat.com/", "weight": 4.52403896920427}, {"concept": "EMOTIONAL_APPEAL", "plain_present": "uses emotionally charged language", "plain_absent": "uses a neutral tone", "present": true, "quote": "Studies show increased attraction to opposite sex http://www.millpat.com/", "weight": 0.6559244237218473}, {"concept": "LANGUAGE_ANOMALIES", "plain_present": "contains spelling errors or deliberately distorted words", "plain_absent": "is written in correct language", "present": false, "quote": null, "weight": 0.22616888557514772}, {"concept": "EXPECTED_CONTEXT", "plain_present": "continues an existing conversation or subscription", "plain_absent": "shows no sign of a prior relationship with you", "present": false, "quote": null, "weight": -3.436121599808071}, {"concept": "LINK_PRESENT", "plain_present": "contains a web link", "plain_absent": "contains no web link", "present": true, "quote": "http://www.millpat.com/", "weight": -0.516249120518375}], "logit_terms": {"bias": 0.803060862860443, "residual": 0.0, "threshold": -1.3181620904250528}}}}, {"id": "e04", "truth": 1, "planted": false, "planted_off": [], "text": "Subject: Free of charge professional installation consultations could be of great help. Prompt reply on all your requests. Money back guarantee ensures the quality of product.\n\nWhen you  need some software or application, as a rule, you dont have time to wait until your CD  will be delivered. Now you can pay and download software localized in many languages. \nFree of charge professional installation consultations could be of great help. Prompt reply on all your requests. Money back guarantee ensures the quality of product.", "ai": {"score_only": {"decision": 1, "prob": 0.8813968412249188}, "posthoc": {"decision": 1, "prob": 0.8813968412249188, "highlights": ["quality", "consultations", "professional", "guarantee", "prompt", "software"]}, "concept": {"decision": 1, "prob": 0.8813968412249188, "explanation": "This email is likely phishing or harmful spam. The main reasons: it uses emotionally charged language (\"installation consultations could be of great help.\"); it contains spelling errors or deliberately distorted words (\"rule, you dont have time to\"); it advertises something or offers a reward (\"Free of charge professional installation consultations could\"). Do not click its links or reply.", "checklist": [{"concept": "URGENCY_OR_THREAT", "plain_present": "pressures you with a deadline or a threatened consequence", "plain_absent": "does not pressure you with deadlines or threats", "present": false, "quote": null, "weight": -1.8445769943015402}, {"concept": "ORG_OR_AUTHORITY_CLAIM", "plain_present": "claims to come from an organization or authority", "plain_absent": "does not claim to speak for an organization", "present": false, "quote": null, "weight": 0.649933145578919}, {"concept": "SENSITIVE_INFO_REQUEST", "plain_present": "asks for passwords, personal data, or payment", "plain_absent": "does not ask for passwords, personal data, or payment", "present": false, "quote": null, "weight": -0.024912052036776003}, {"concept": "ACTION_REQUEST", "plain_present": "asks you to take an action (click, reply, buy, call...)", "plain_absent": "does not ask you to do anything", "present": false, "quote": null, "weight": 0.6649655009436565}, {"concept": "PROMOTIONAL_OFFER", "plain_present": "advertises something or offers a reward", "plain_absent": "does not advertise or offer anything", "present": true, "quote": "Free of charge professional installation consultations could", "weight": 0.09147275023730356}, {"concept": "HIGH_RISK_PRODUCT", "plain_present": "is about a product type common in unsolicited bulk email", "plain_absent": "is not about a high-risk product type", "present": false, "quote": null, "weight": 4.52403896920427}, {"concept": "EMOTIONAL_APPEAL", "plain_present": "uses emotionally charged language", "plain_absent": "uses a neutral tone", "present": true, "quote": "installation consultations could be of great help.", "weight": 0.6559244237218473}, {"concept": "LANGUAGE_ANOMALIES", "plain_present": "contains spelling errors or deliberately distorted words", "plain_absent": "is written in correct language", "present": true, "quote": "rule, you dont have time to", "weight": 0.22616888557514772}, {"concept": "EXPECTED_CONTEXT", "plain_present": "continues an existing conversation or subscription", "plain_absent": "shows no sign of a prior relationship with you", "present": false, "quote": null, "weight": -3.436121599808071}, {"concept": "LINK_PRESENT", "plain_present": "contains a web link", "plain_absent": "contains no web link", "present": false, "quote": null, "weight": -0.516249120518375}], "logit_terms": {"bias": 0.803060862860443, "residual": 0.0, "threshold": -1.3181620904250528}}}}, {"id": "e05", "truth": 1, "planted": false, "planted_off": [], "text": "Subject: PhentrimineBestQualityAvailable\n\nNewProductsPharmacyWorldwide\nhttp://l41h9q.bay.livefilestore.com/xxxx", "ai": {"score_only": {"decision": 1, "prob": 0.9978432799510675}, "posthoc": {"decision": 1, "prob": 0.9978432799510675, "highlights": ["livefilestore", "index", "bay"]}, "concept": {"decision": 1, "prob": 0.9978432799510675, "explanation": "This email is very likely phishing or harmful spam. The main reasons: it is about a product type common in unsolicited bulk email (\"PhentrimineBestQualityAvailable\"); it claims to come from an organization or authority (\"NewProductsPharmacyWorldwide\"); it contains spelling errors or deliberately distorted words (\"PhentrimineBestQualityAvailable\"). One sign points the other way: it contains a web link. Do not click its links or reply. If it names an organization you use, contact it through its official website or app instead.", "checklist": [{"concept": "URGENCY_OR_THREAT", "plain_present": "pressures you with a deadline or a threatened consequence", "plain_absent": "does not pressure you with deadlines or threats", "present": false, "quote": null, "weight": -1.8445769943015402}, {"concept": "ORG_OR_AUTHORITY_CLAIM", "plain_present": "claims to come from an organization or authority", "plain_absent": "does not claim to speak for an organization", "present": true, "quote": "NewProductsPharmacyWorldwide", "weight": 0.649933145578919}, {"concept": "SENSITIVE_INFO_REQUEST", "plain_present": "asks for passwords, personal data, or payment", "plain_absent": "does not ask for passwords, personal data, or payment", "present": false, "quote": null, "weight": -0.024912052036776003}, {"concept": "ACTION_REQUEST", "plain_present": "asks you to take an action (click, reply, buy, call...)", "plain_absent": "does not ask you to do anything", "present": false, "quote": null, "weight": 0.6649655009436565}, {"concept": "PROMOTIONAL_OFFER", "plain_present": "advertises something or offers a reward", "plain_absent": "does not advertise or offer anything", "present": true, "quote": "NewProductsPharmacyWorldwide", "weight": 0.09147275023730356}, {"concept": "HIGH_RISK_PRODUCT", "plain_present": "is about a product type common in unsolicited bulk email", "plain_absent": "is not about a high-risk product type", "present": true, "quote": "PhentrimineBestQualityAvailable", "weight": 4.52403896920427}, {"concept": "EMOTIONAL_APPEAL", "plain_present": "uses emotionally charged language", "plain_absent": "uses a neutral tone", "present": false, "quote": null, "weight": 0.6559244237218473}, {"concept": "LANGUAGE_ANOMALIES", "plain_present": "contains spelling errors or deliberately distorted words", "plain_absent": "is written in correct language", "present": true, "quote": "PhentrimineBestQualityAvailable", "weight": 0.22616888557514772}, {"concept": "EXPECTED_CONTEXT", "plain_present": "continues an existing conversation or subscription", "plain_absent": "shows no sign of a prior relationship with you", "present": false, "quote": null, "weight": -3.436121599808071}, {"concept": "LINK_PRESENT", "plain_present": "contains a web link", "plain_absent": "contains no web link", "present": true, "quote": "http://l41h9q.bay.livefilestore.com/y1pSwk9MlG4nmjFKDmGk5Eri2g-epSQgstqndKlbXR-dTE65CFtf7MvXMUYL8EvmTxyJbRfAD5oqfU9v40QSZF6Kg/index.html", "weight": -0.516249120518375}], "logit_terms": {"bias": 0.803060862860443, "residual": 0.0, "threshold": -1.3181620904250528}}}}, {"id": "e06", "truth": 1, "planted": true, "planted_off": ["ACTION_REQUEST"], "text": "Subject: CNN Alerts: My Custom Alert\n\nCNN Alerts: My Custom Alert\n\n\n\n\n\n\n \n\n\n\nAlert Name: My Custom Alert\nHeath Ledger's body exhumed\n\nFri, 8 Aug 2008 18:30:03 +0800\n\nFULL STORY\n\n\n\nYou have agreed to receive this email from CNN.com as a result of your CNN.com preference settings.\nTo manage your settings click here.\nTo alter your alert criteria or frequency or to unsubscribe from receiving custom email alerts, click here.\n\n\nCable News Network. One CNN Center, Atlanta, Georgia 30303\n© 2008 Cable News Network.\nA Time Warner Company\nAll Rights Reserved.\nView our privacy policy and terms.", "ai": {"score_only": {"decision": 0, "prob": 0.7665980865077286}, "posthoc": {"decision": 0, "prob": 0.7665980865077286, "highlights": ["unsubscribe", "email", "view", "news", "policy", "receiving"]}, "concept": {"decision": 0, "prob": 0.7665980865077286, "explanation": "This email is possibly legitimate. The main reasons: it continues an existing conversation or subscription (\"agreed to receive this email from CNN.com\"). One sign points the other way: it claims to come from an organization or authority. If you did not expect this email, still avoid clicking its links and check through the sender's official website or app.", "checklist": [{"concept": "URGENCY_OR_THREAT", "plain_present": "pressures you with a deadline or a threatened consequence", "plain_absent": "does not pressure you with deadlines or threats", "present": false, "quote": null, "weight": -1.8445769943015402}, {"concept": "ORG_OR_AUTHORITY_CLAIM", "plain_present": "claims to come from an organization or authority", "plain_absent": "does not claim to speak for an organization", "present": true, "quote": "Network. One CNN Center, Atlanta, Georgia", "weight": 0.649933145578919}, {"concept": "SENSITIVE_INFO_REQUEST", "plain_present": "asks for passwords, personal data, or payment", "plain_absent": "does not ask for passwords, personal data, or payment", "present": false, "quote": null, "weight": -0.024912052036776003}, {"concept": "ACTION_REQUEST", "plain_present": "asks you to take an action (click, reply, buy, call...)", "plain_absent": "does not ask you to do anything", "present": false, "quote": null, "weight": 0.6649655009436565}, {"concept": "PROMOTIONAL_OFFER", "plain_present": "advertises something or offers a reward", "plain_absent": "does not advertise or offer anything", "present": false, "quote": null, "weight": 0.09147275023730356}, {"concept": "HIGH_RISK_PRODUCT", "plain_present": "is about a product type common in unsolicited bulk email", "plain_absent": "is not about a high-risk product type", "present": false, "quote": null, "weight": 4.52403896920427}, {"concept": "EMOTIONAL_APPEAL", "plain_present": "uses emotionally charged language", "plain_absent": "uses a neutral tone", "present": false, "quote": null, "weight": 0.6559244237218473}, {"concept": "LANGUAGE_ANOMALIES", "plain_present": "contains spelling errors or deliberately distorted words", "plain_absent": "is written in correct language", "present": false, "quote": null, "weight": 0.22616888557514772}, {"concept": "EXPECTED_CONTEXT", "plain_present": "continues an existing conversation or subscription", "plain_absent": "shows no sign of a prior relationship with you", "present": true, "quote": "agreed to receive this email from CNN.com", "weight": -3.436121599808071}, {"concept": "LINK_PRESENT", "plain_present": "contains a web link", "plain_absent": "contains no web link", "present": false, "quote": null, "weight": -0.516249120518375}], "logit_terms": {"bias": 0.803060862860443, "residual": 0.0, "threshold": -1.3181620904250528}}}}, {"id": "e07", "truth": 1, "planted": true, "planted_off": ["HIGH_RISK_PRODUCT", "EMOTIONAL_APPEAL"], "text": "Subject: Proven Effective for 72 Hours Free Trial Sample Available Today\n\nSize DOES matter, and unfortunately, many traditional methods to increase size simply DON'T work, and are very inconvenient. \n\nPut on an average gain of 3.02 inches where it matters - and all gains are 100% permanent!\n\nhttp://willpaid.com/xxxx", "ai": {"score_only": {"decision": 0, "prob": 0.017890292001519703}, "posthoc": {"decision": 0, "prob": 0.017890292001519703, "highlights": ["does", "methods", "work", "free", "average"]}, "concept": {"decision": 0, "prob": 0.017890292001519703, "explanation": "This email is very likely legitimate. The main reasons: it pressures you with a deadline or a threatened consequence (\"for 72 Hours Free Trial Sample Available Today\"); it contains a web link (\"http://willpaid.com/\"). One sign points the other way: it advertises something or offers a reward. If you did not expect this email, still avoid clicking its links and check through the sender's official website or app.", "checklist": [{"concept": "URGENCY_OR_THREAT", "plain_present": "pressures you with a deadline or a threatened consequence", "plain_absent": "does not pressure you with deadlines or threats", "present": true, "quote": "for 72 Hours Free Trial Sample Available Today", "weight": -1.8445769943015402}, {"concept": "ORG_OR_AUTHORITY_CLAIM", "plain_present": "claims to come from an organization or authority", "plain_absent": "does not claim to speak for an organization", "present": false, "quote": null, "weight": 0.649933145578919}, {"concept": "SENSITIVE_INFO_REQUEST", "plain_present": "asks for passwords, personal data, or payment", "plain_absent": "does not ask for passwords, personal data, or payment", "present": false, "quote": null, "weight": -0.024912052036776003}, {"concept": "ACTION_REQUEST", "plain_present": "asks you to take an action (click, reply, buy, call...)", "plain_absent": "does not ask you to do anything", "present": false, "quote": null, "weight": 0.6649655009436565}, {"concept": "PROMOTIONAL_OFFER", "plain_present": "advertises something or offers a reward", "plain_absent": "does not advertise or offer anything", "present": true, "quote": "for 72 Hours Free Trial Sample Available Today", "weight": 0.09147275023730356}, {"concept": "HIGH_RISK_PRODUCT", "plain_present": "is about a product type common in unsolicited bulk email", "plain_absent": "is not about a high-risk product type", "present": false, "quote": null, "weight": 4.52403896920427}, {"concept": "EMOTIONAL_APPEAL", "plain_present": "uses emotionally charged language", "plain_absent": "uses a neutral tone", "present": false, "quote": null, "weight": 0.6559244237218473}, {"concept": "LANGUAGE_ANOMALIES", "plain_present": "contains spelling errors or deliberately distorted words", "plain_absent": "is written in correct language", "present": false, "quote": null, "weight": 0.22616888557514772}, {"concept": "EXPECTED_CONTEXT", "plain_present": "continues an existing conversation or subscription", "plain_absent": "shows no sign of a prior relationship with you", "present": false, "quote": null, "weight": -3.436121599808071}, {"concept": "LINK_PRESENT", "plain_present": "contains a web link", "plain_absent": "contains no web link", "present": true, "quote": "http://willpaid.com/", "weight": -0.516249120518375}], "logit_terms": {"bias": 0.803060862860443, "residual": 0.0, "threshold": -1.3181620904250528}}}}], "practice": {"id": "practice", "truth": 0, "planted": false, "planted_off": [], "text": "Subject: Re: meta rules doesn't work on some special version.\n\nPenghui Wang wrote: > >>   > I have tested via the sendmail command: > > #sendmail wangph < none-subject > #sendmail wangph < have-subject > > #cat none-subject > This is the message body. > > #cat have-subject > Subject: This is the message subject > > This is the message body. > > Both of them marked with MISSING_SUBJECT. > > So, that's not the condition you have mentained. But thanks any way. > What happens if you leave sendmail out, and feed them directly to  spamassassin? spamassassin -t < none-subject spamassassin -t < have-subject I'm suspect sendmail choked on the absurdly bad input and decided that  your subject was really body text, and inserted a blank line before it  and after the headers it added to fix the broken message...", "ai": {"score_only": {"decision": 0, "prob": 0.16300869399819642}, "posthoc": {"decision": 0, "prob": 0.16300869399819642, "highlights": ["spamassassin", "wrote", "thanks", "rules", "version", "sendmail"]}, "concept": {"decision": 0, "prob": 0.16300869399819642, "explanation": "This email is likely legitimate. The main reasons: it continues an existing conversation or subscription (\"Penghui Wang wrote: > >>\"). One sign points the other way: it uses emotionally charged language. If you did not expect this email, still avoid clicking its links and check through the sender's official website or app.", "checklist": [{"concept": "URGENCY_OR_THREAT", "plain_present": "pressures you with a deadline or a threatened consequence", "plain_absent": "does not pressure you with deadlines or threats", "present": false, "quote": null, "weight": -1.8445769943015402}, {"concept": "ORG_OR_AUTHORITY_CLAIM", "plain_present": "claims to come from an organization or authority", "plain_absent": "does not claim to speak for an organization", "present": false, "quote": null, "weight": 0.649933145578919}, {"concept": "SENSITIVE_INFO_REQUEST", "plain_present": "asks for passwords, personal data, or payment", "plain_absent": "does not ask for passwords, personal data, or payment", "present": false, "quote": null, "weight": -0.024912052036776003}, {"concept": "ACTION_REQUEST", "plain_present": "asks you to take an action (click, reply, buy, call...)", "plain_absent": "does not ask you to do anything", "present": false, "quote": null, "weight": 0.6649655009436565}, {"concept": "PROMOTIONAL_OFFER", "plain_present": "advertises something or offers a reward", "plain_absent": "does not advertise or offer anything", "present": false, "quote": null, "weight": 0.09147275023730356}, {"concept": "HIGH_RISK_PRODUCT", "plain_present": "is about a product type common in unsolicited bulk email", "plain_absent": "is not about a high-risk product type", "present": false, "quote": null, "weight": 4.52403896920427}, {"concept": "EMOTIONAL_APPEAL", "plain_present": "uses emotionally charged language", "plain_absent": "uses a neutral tone", "present": true, "quote": "choked on the absurdly bad input and", "weight": 0.6559244237218473}, {"concept": "LANGUAGE_ANOMALIES", "plain_present": "contains spelling errors or deliberately distorted words", "plain_absent": "is written in correct language", "present": true, "quote": "I'm suspect sendmail choked on", "weight": 0.22616888557514772}, {"concept": "EXPECTED_CONTEXT", "plain_present": "continues an existing conversation or subscription", "plain_absent": "shows no sign of a prior relationship with you", "present": true, "quote": "Penghui Wang wrote: > >>", "weight": -3.436121599808071}, {"concept": "LINK_PRESENT", "plain_present": "contains a web link", "plain_absent": "contains no web link", "present": false, "quote": null, "weight": -0.516249120518375}], "logit_terms": {"bias": 0.803060862860443, "residual": 0.0, "threshold": -1.3181620904250528}}}}, "usab": ["I would like to use this assistant when I am unsure about an email.", "The assistant was easy to use.", "The assistant's information fit together and made sense.", "I felt confident using the assistant.", "Most people would learn to use this assistant very quickly."], "ac_index": 3, "per": {"correct": 1, "planted": 1}};
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const ARMS = [
+  ["score_only", "Score only", "\"AI: phishing or harmful spam (92% confident)\"", "the CBM's decision, no reasons", "No"],
+  ["posthoc", "Black box + highlights", "The same verdict, plus the 6 words that pushed hardest toward it, highlighted in the email (a typical post-hoc explanation)", "exact word attributions of a TF-IDF text model, shown with the CBM's decision", "No"],
+  ["concept", "Concepts", "The verdict, a short explanation (decision, reasons with quotes, advice), and the full checklist of warning signs with a quote for each sign found", "the concept bottleneck model; every sentence comes from its own terms", "Yes: \"I disagree\" on any sign recalculates the verdict from the model's weights"],
+];
+const CONF5 = ["Very low", "Low", "Medium", "High", "Very high"];
+const TRUST5 = ["Very distrusting", "Distrusting", "Neutral", "Trusting", "Very trusting"];
+const LIK5 = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
+const correctPool = D.pool.filter(e => !e.planted), plantedPool = D.pool.filter(e => e.planted);
+
+const W = { arm: "concept", i: 0, a: {}, e1: correctPool.find(e => e.truth === 1) || correctPool[0], e2: plantedPool[plantedPool.length - 1], em: {} };
+const emState = key => W.em[key] || (W.em[key] = { shown: false, flips: {} });
+
+const BG = [
+  ["B1", "age", "What is your age?", "select", ["18–24", "25–34", "35–44", "45–54", "55–64", "65+"]],
+  ["B2", "gender", "What is your gender?", "radio", ["Woman", "Man", "Non-binary", "Prefer to self-describe", "Prefer not to say"]],
+  ["B3", "edu", "What is the highest level of education you have completed?", "select", ["Secondary school or less", "High school diploma", "Some college or associate degree", "Bachelor's degree", "Master's degree", "Doctorate", "Prefer not to say"]],
+  ["B4", "tech", "Have you studied or worked in computer science, IT, or engineering?", "radio", ["Yes", "No", "Prefer not to say"]],
+  ["B5", "email_use", "How often do you read email?", "radio", ["Several times a day", "About once a day", "A few times a week", "Rarely"]],
+  ["B6", "received", "Have you ever received a phishing or scam email?", "radio", ["Yes", "No", "Not sure"]],
+  ["B7", "tricked", "Have you ever been tricked by one (clicked a link, replied, or lost money)?", "radio", ["Yes", "No", "Not sure", "Prefer not to say"]],
+  ["B8", "conf_pre", "How would you rate your ability to recognise phishing emails?", "likert", CONF5],
+  ["B9", "trust_pre", "In general, how much do you trust AI systems?", "likert", TRUST5],
+];
+const SUS = D.usab.slice(); SUS.splice(D.ac_index, 0, "To show you are paying attention, please select “Strongly disagree” here.");
+const XQ = ["The AI's assessments helped me understand why each email was judged the way it was.",
+            "The AI's assessments gave me enough detail to make my own decision.", "I could tell when the AI might be wrong."];
+const SC = [
+  { id: "consent", t: "Consent", time: "0.5 min", req: ["consent"], m: "C1", d: "What the study is, safety note about masked links, consent." },
+  { id: "about", t: "About you", time: "1.5 min", req: BG.map(b => b[1]), m: "B1–B9", d: "9 background questions." },
+  { id: "practice", t: "Practice email", time: "1 min", email: "practice", req: ["practice_q1", "practice_c1", "practice_q2", "practice_c2"], m: "not scored", d: "One unscored email shows how the AI panel works." },
+  { id: "email1", t: "Email 1 of 2", time: "1.5 min", email: "e1", req: ["e1_q1", "e1_c1", "e1_q2", "e1_c2"], m: "E1–E4 · AI correct", d: "Answer, show the AI, answer again.", loop: true },
+  { id: "email2", t: "Email 2 of 2", time: "1.5 min", email: "e2", req: ["e2_q1", "e2_c1", "e2_q2", "e2_c2"], m: "E1–E4 · planted error", d: "Same; one of the two is the planted error.", loop: true },
+  { id: "sus", t: "Usability", time: "0.5 min", req: SUS.map((_, k) => "s" + k), m: "U1–U5 + attention check", d: "5 usability items + 1 attention check." },
+  { id: "expl", t: "The AI's assessments", time: "0.5 min", req: XQ.map((_, k) => "x" + k), m: "X1–X3", d: "3 explanation-quality items." },
+  { id: "last", t: "Last questions", time: "1 min", req: ["trust_post", "conf_post"], m: "T1, T2, D1, O1, O2", d: "Trust and ability again, disagreement, likes and concerns." },
+  { id: "compare", t: "Two ways to explain", time: "1 min", req: [], m: "P1, P2 (optional)", d: "The same email explained both ways, side by side." },
+  { id: "debrief", t: "Debrief", time: "0.5 min", req: [], m: "no questions", d: "Names the planted error, gives safety tips." },
+  { id: "record", t: "What gets recorded", time: "", req: [], m: "the response file" },
+];
+const answered = k => W.a[k] !== undefined && W.a[k] !== "" && W.a[k] !== false;
+const complete = s => s.req.every(answered);
+
+const radios = (name, opts, cls = "opts") => `<div class="${cls}" role="radiogroup">` + opts.map((o, k) =>
+  `<label><input type="radio" name="${name}" value="${k + 1}" ${W.a[name] == k + 1 ? "checked" : ""}>${esc(o)}</label>`).join("") + `</div>`;
+const select = (name, opts) => `<select data-name="${name}" aria-label="${name}"><option value="">choose…</option>${opts.map(o => `<option ${W.a[name] === o ? "selected" : ""}>${esc(o)}</option>`).join("")}</select>`;
+const qi = (id, text, body, req = true) => `<div class="qitem"><div><span class="qid">${id}</span>${esc(text)}${req ? ' <span class="req">*</span>' : ""}</div>${body}</div>`;
+function verdict(dec, prob) {
+  const conf = Math.round(100 * (dec ? prob : 1 - prob));
+  return dec ? `<span class="verdict bad">AI: phishing or harmful spam (${conf}% confident)</span>` : `<span class="verdict good">AI: legitimate (${conf}% confident)</span>`;
+}
+function highlight(text, words) {
+  if (!words || !words.length) return esc(text);
+  const re = new RegExp("\\b(" + words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|") + ")\\b", "gi");
+  return esc(text).replace(re, "<mark>$1</mark>");
+}
+function conceptDecision(e, st) {
+  const c = e.ai.concept, on = c.checklist.map(x => st.flips[x.concept] ? !x.present : x.present);
+  const logit = c.logit_terms.bias + c.logit_terms.residual + c.checklist.reduce((s, x, i) => s + (on[i] ? x.weight : 0), 0);
+  return { on, dec: logit >= c.logit_terms.threshold ? 1 : 0, changed: Object.values(st.flips).some(Boolean) };
+}
+function findQuote(low, q, taken) {
+  const tries = [q, q.replace(/[.,;:!?)"']+$/, "")];
+  for (let n = q.length - 1; n >= 12; n -= 4) tries.push(q.slice(0, n));
+  for (const t of tries) {
+    const tl = t.trim().toLowerCase();
+    if (tl.length < 3) continue;
+    let from = 0, i;
+    while ((i = low.indexOf(tl, from)) >= 0) { const j = i + tl.length; if (!taken.some(([x, y]) => i < y && j > x)) return [i, j]; from = i + 1; }
+  }
+  return null;
+}
+function linkConcepts(text, items) {  // items: [{n, quote}] -> html; signs sharing a phrase share its highlight
+  const low = text.toLowerCase(), spans = [];
+  items.forEach(it => {
+    if (!it.quote) return;
+    const r = findQuote(low, it.quote, spans.map(x => x.r));
+    if (r) { spans.push({ r, ns: [it.n] }); return; }
+    const raw = findQuote(low, it.quote, []), hit = raw && spans.find(x => raw[0] < x.r[1] && raw[1] > x.r[0]);
+    if (hit) hit.ns.push(it.n);
+  });
+  spans.sort((p, q) => p.r[0] - q.r[0]);
+  let out = "", at = 0;
+  spans.forEach(({ r: [x, y], ns }) => {
+    out += esc(text.slice(at, x)) + `<mark class="cm c${(ns[0] - 1) % 8}" data-n="${ns.join(" ")}">${esc(text.slice(x, y))}</mark>`
+      + ns.map(n => `<sup class="cb c${(n - 1) % 8}">${n}</sup>`).join("");
+    at = y;
+  });
+  return out + esc(text.slice(at));
+}
+function numberedSigns(e, flips) {
+  let n = 0;
+  return e.ai.concept.checklist.map(x => { const on = flips[x.concept] ? !x.present : x.present;
+    return { ...x, on, n: on ? ++n : null, quoteShown: on && !flips[x.concept] ? x.quote : null }; });
+}
+const linkedText = (e, flips) => linkConcepts(e.text, numberedSigns(e, flips).filter(x => x.n).map(x => ({ n: x.n, quote: x.quoteShown })));
+function checklist(e, flips, key) {
+  return `<span class="note">Warning signs checked (number and colour match the phrase in the email):</span><ul class="chk">` + numberedSigns(e, flips).map(x =>
+    `<li class="${flips[x.concept] ? "flipped" : ""}" ${x.n ? `data-n="${x.n}"` : ""}><span class="m">${x.n ? `<span class="cb c${(x.n - 1) % 8}">${x.n}</span>` : "–"}</span><span>It ${esc(x.on ? x.plain_present : x.plain_absent)}${x.quoteShown ? `<span class="qt">“${esc(x.quoteShown)}”</span>` : ""}</span>${key ? `<button data-flip="${esc(x.concept)}" data-key="${key}">${flips[x.concept] ? "Undo" : "I disagree"}</button>` : "<span></span>"}</li>`).join("") + `</ul>`;
+}
+function aiPanel(e, key) {
+  const A = e.ai, st = emState(key);
+  if (W.arm === "score_only") return verdict(A.score_only.decision, A.score_only.prob);
+  if (W.arm === "posthoc") return verdict(A.posthoc.decision, A.posthoc.prob) + `<p class="note">Highlighted in the email: the words that most influenced the verdict.</p>`;
+  const c = A.concept, r = conceptDecision(e, st);
+  return (r.changed ? (r.dec ? `<span class="verdict bad">AI, recalculated with your corrections: phishing or harmful spam</span>` : `<span class="verdict good">AI, recalculated with your corrections: legitimate</span>`) : verdict(c.decision, c.prob))
+    + (r.changed ? "" : `<p>${esc(c.explanation)}</p>`) + checklist(e, st.flips, key);
+}
+const emailOf = key => key === "practice" ? D.practice : W[key];
+
+function renderEmail(s) {
+  const key = s.email, e = emailOf(key), st = emState(key);
+  const text = !st.shown ? esc(e.text) : W.arm === "posthoc" ? highlight(e.text, e.ai.posthoc.highlights) : W.arm === "concept" ? linkedText(e, st.flips) : esc(e.text);
+  const step = !st.shown ? 1 : (answered(`${key}_q2`) && answered(`${key}_c2`) ? 4 : 3);
+  const armbox = `<div class="armbox"><span class="note">Arm shown below. Each participant sees only one of these, for the whole study:</span><div class="seg" id="arm-in">${ARMS.map(([k, l, see]) =>
+    `<button data-k="${k}" aria-pressed="${k === W.arm}">${esc(l)}<small>${esc(k === "score_only" ? "verdict and confidence" : k === "posthoc" ? "verdict + highlighted words" : "verdict + warning signs you can correct")}</small></button>`).join("")}</div></div>`;
+  const steps = `<div class="steps"><span class="${step > 1 ? "done" : "on"}">1 · Your answer</span><span class="${step > 1 ? "done" : ""}">2 · AI assessment</span><span class="${step === 3 ? "on" : step > 3 ? "done" : ""}">3 · Your final answer</span></div>`;
+  let html = `${armbox}<p class="note">${key === "practice" ? "Practice email (does not count)" : s.t}</p>${steps}<div class="email">${text}</div>
+    ${qi("E1", "Is this email legitimate or a phishing / harmful spam email?", radios(`${key}_q1`, ["Legitimate", "Phishing or harmful spam"]))}
+    ${qi("E2", "How confident are you?", radios(`${key}_c1`, CONF5, "likert"))}`;
+  if (!st.shown) html += `<div><button class="btn" id="show-ai" ${answered(`${key}_q1`) && answered(`${key}_c1`) ? "" : "disabled"}>Show AI assessment</button></div>`;
+  else html += `<div class="ai">${aiPanel(e, key)}</div>
+    ${qi("E3", "After seeing the AI: is this email legitimate or a phishing / harmful spam email?", radios(`${key}_q2`, ["Legitimate", "Phishing or harmful spam"]))}
+    ${qi("E4", "How confident are you now?", radios(`${key}_c2`, CONF5, "likert"))}`;
+  if (key === "e2") html += `<p class="callout"><b>Researcher note (not shown to participants):</b> this is the planted error. The truth is ${e.truth ? "phishing / spam" : "legitimate"}; the AI was made to say legitimate by switching off <code>${e.planted_off.join("</code>, <code>")}</code>, which are really present. In the concept arm, disagree with one of those signs to flip the verdict back.</p>`;
+  return html;
+}
+function disagreement() {
+  for (const key of ["e1", "e2"]) {
+    const q2 = W.a[`${key}_q2`];
+    if (q2 === undefined) continue;
+    const shown = W[key].ai.concept.decision;
+    if ((+q2 - 1) !== shown) return { e: W[key], shown, after: +q2 - 1 };
+  }
+  return null;
+}
+
+function renderScreen() {
+  const s = SC[W.i];
+  let body = "";
+  if (s.id === "consent") body = `<h2>Email check study</h2>
+    <p>You will read 2 emails and decide for each one whether it is <b>legitimate</b> or a <b>phishing / harmful spam</b> email. After your first answer, an AI assistant will show you its assessment and you can answer again.</p>
+    <p class="note">For your safety, web links are not clickable and parts of them are replaced with "xxxx". Please do not try to visit or guess them. The study takes about 10 minutes. Your answers are anonymous, and you can stop at any time. The emails are real messages from 2008; some unwanted emails use adult or sexual wording.</p>
+    <label class="consent-box"><input type="checkbox" id="f-consent" ${W.a.consent ? "checked" : ""}><span><span class="qid">C1</span>I have read the information above and agree to take part. <span class="req">*</span></span></label>`;
+  else if (s.id === "about") body = `<h2>About you</h2>` + BG.map(([id, name, q, kind, opts]) =>
+    qi(id, q, kind === "select" ? select(name, opts) : radios(name, opts, kind === "likert" ? "likert" : "opts"))).join("");
+  else if (s.email) body = renderEmail(s);
+  else if (s.id === "sus") body = `<h2>About the AI assistant</h2>` + SUS.map((q, k) => qi(k === D.ac_index ? "AC" : "U" + (k < D.ac_index ? k + 1 : k), q, radios("s" + k, LIK5, "likert"))).join("")
+    + `<p class="note">AC is the attention check: participants who do not choose "Strongly disagree" are excluded.</p>`;
+  else if (s.id === "expl") body = `<h2>About the AI's assessments</h2>` + XQ.map((q, k) => qi("X" + (k + 1), q, radios("x" + k, LIK5, "likert"))).join("");
+  else if (s.id === "last") {
+    const d = disagreement(), say = v => v ? "phishing or harmful spam" : "legitimate";
+    body = `<h2>Last questions</h2>
+      ${qi("T1", "How much do you trust the AI assistant you used in this study?", radios("trust_post", TRUST5, "likert"))}
+      ${qi("T2", "How would you now rate your ability to recognise phishing emails?", radios("conf_post", CONF5, "likert"))}
+      ${d ? qi("D1", `For this email, the AI said "${say(d.shown)}" and you answered "${say(d.after)}". Why did you decide differently from the AI?`,
+        `<div class="email" style="max-height:70px">${esc(d.e.text.split("\n")[0])}</div><textarea data-name="disagree" aria-label="Why you disagreed">${esc(W.a.disagree || "")}</textarea>`, false)
+        : `<p class="note">D1 (why you disagreed with the AI) appears only when a final answer differs from the AI's. Answer an email differently from the AI to see it.</p>`}
+      ${qi("O1", "What did you like about the AI assistant?", `<textarea data-name="like" aria-label="What you liked">${esc(W.a.like || "")}</textarea>`, false)}
+      ${qi("O2", "Any concerns or suggestions?", `<textarea data-name="concern" aria-label="Concerns">${esc(W.a.concern || "")}</textarea>`, false)}`;
+  } else if (s.id === "compare") {
+    const e = W.e2, A = e.ai;
+    body = `<h2>Two ways to explain the same email</h2>
+      <p class="claim">Different groups in this study saw different kinds of AI explanation. Here is one of your emails explained both ways. Point at a warning sign to see its phrase.</p>
+      <div class="cmp">
+        <div><h3>Highlighted words</h3>${verdict(A.posthoc.decision, A.posthoc.prob)}<p class="note">The words that most influenced the verdict.</p>
+          <div class="email">${highlight(e.text, A.posthoc.highlights)}</div>
+          <p class="lacks">Shows <i>where</i> the AI looked, not <i>what</i> it concluded about each part, so there is nothing specific to check or correct.</p></div>
+        <div><h3>Warning signs</h3>${verdict(A.concept.decision, A.concept.prob)}<p class="note">Each sign found has a number and colour, matching its phrase.</p>
+          <div class="email">${linkedText(e, {})}</div>${checklist(e, {}, null)}
+          <p class="lacks">Every claim can be checked against the email ("it is not about a high-risk product type"), and a wrong claim can be corrected.</p></div>
+      </div>
+      ${qi("P1", "Which would help you more to decide whether an email is safe?", radios("prefer", ["Highlighted words", "Warning signs", "No difference"]), false)}
+      ${qi("P2", "Why?", `<textarea data-name="prefer_why" aria-label="Why">${esc(W.a.prefer_why || "")}</textarea>`, false)}
+      <p class="note">Shown after all measures are recorded, so it cannot affect the arm comparison. The two "lacks" lines are for this page only; participants see the explanations and the question.</p>`;
+  } else if (s.id === "debrief") body = `<h2>Thank you!</h2><p>Your responses are recorded.</p>
+    <h3>What you should know</h3>
+    <p>The AI assistant in this study is a research prototype. On purpose, it gave the wrong answer on this email: it called it legitimate, but it was an unwanted or malicious email.</p>
+    <div class="email" style="max-height:70px">${esc(W.e2.text.split("\n")[0])}</div>
+    <p>We did this to learn whether people can notice when an AI is wrong. Real AI tools make mistakes too.</p>
+    <h3>Three tips for real email</h3>
+    <ul class="plain"><li>Do not click links in unexpected emails; open the company's website or app yourself.</li>
+      <li>No real bank or service asks for your password or card number by email.</li>
+      <li>Pressure ("act now", "account closed") is a warning sign: slow down and check.</li></ul>
+    <p class="note">The page then returns to Prolific with the completion code.</p>`;
+  else if (s.id === "record") body = renderRecord();
+  document.getElementById("wt-screen").innerHTML = `<div class="screen-top"><span class="eyebrow">Screen ${W.i + 1} of ${SC.length}${s.time ? " · " + s.time : ""}</span><span class="measures">${esc(s.m)}</span></div>
+    <div style="display:grid;gap:14px">${body}</div>
+    <div class="wt-foot"><button class="btn ghost" id="wt-back" ${W.i === 0 ? "disabled" : ""}>Back</button>
+      <span class="note" id="wt-hint"></span>
+      ${W.i < SC.length - 1 ? `<button class="btn" id="wt-next">${s.id === "debrief" ? "See the record" : "Next"}</button>` : `<button class="btn ghost" id="wt-reset">Start again</button>`}</div>`;
+  bindScreen();
+  updateNext();
+}
+function updateNext() {
+  const s = SC[W.i], nx = document.getElementById("wt-next"), hint = document.getElementById("wt-hint");
+  if (nx) {
+    const missing = s.req.filter(k => !answered(k)).length;
+    nx.disabled = missing > 0;
+    hint.textContent = missing ? `${missing} required answer${missing > 1 ? "s" : ""} left` : "";
+  }
+  const b = document.getElementById("show-ai");
+  if (s.email && b) b.disabled = !(answered(`${s.email}_q1`) && answered(`${s.email}_c1`));
+  renderNav();
+}
+function bindScreen() {
+  const el = document.getElementById("wt-screen");
+  el.querySelectorAll("input[type=radio]").forEach(r => r.addEventListener("change", () => {
+    W.a[r.name] = r.value; updateNext();
+    const s = SC[W.i]; if (s.email && /_(q2|c2)$/.test(r.name)) { const sp = el.querySelectorAll(".steps span")[2]; if (sp && answered(`${s.email}_q2`) && answered(`${s.email}_c2`)) sp.className = "done"; }
+  }));
+  el.querySelectorAll("select").forEach(r => r.addEventListener("change", () => { W.a[r.dataset.name] = r.value; updateNext(); }));
+  el.querySelectorAll("textarea").forEach(r => r.addEventListener("input", () => { W.a[r.dataset.name] = r.value; }));
+  const cb = document.getElementById("f-consent"); if (cb) cb.addEventListener("change", () => { W.a.consent = cb.checked; updateNext(); });
+  const ai = document.getElementById("show-ai"); if (ai) ai.addEventListener("click", () => { emState(SC[W.i].email).shown = true; renderScreen(); });
+  el.querySelectorAll("button[data-flip]").forEach(b => b.addEventListener("click", () => {
+    const st = emState(b.dataset.key); st.flips[b.dataset.flip] = !st.flips[b.dataset.flip]; renderScreen(); }));
+  el.querySelectorAll("#arm-in button").forEach(b => b.addEventListener("click", () => setArm(b.dataset.k)));
+  el.querySelectorAll(".chk li[data-n]").forEach(li => {
+    const marks = () => li.closest(".cmp > div, #wt-screen").querySelectorAll(`.cm[data-n~="${li.dataset.n}"]`);
+    li.addEventListener("mouseenter", () => marks().forEach(m => m.classList.add("hl")));
+    li.addEventListener("mouseleave", () => marks().forEach(m => m.classList.remove("hl")));
+  });
+  const bk = document.getElementById("wt-back"); if (bk) bk.addEventListener("click", () => go(W.i - 1));
+  const nx = document.getElementById("wt-next"); if (nx) nx.addEventListener("click", () => go(W.i + 1));
+  const rs = document.getElementById("wt-reset"); if (rs) rs.addEventListener("click", () => { W.a = {}; W.em = {}; go(0); });
+}
+function go(i) { W.i = Math.max(0, Math.min(SC.length - 1, i)); renderScreen(); }
+function renderNav() {
+  const nav = document.getElementById("wt-nav");
+  nav.innerHTML = SC.map((s, k) => `<button data-k="${k}" ${k === W.i ? 'aria-current="step"' : ""}><span class="dot ${s.req.length && complete(s) ? "ok" : ""}"></span>${esc(s.t)}</button>`).join("");
+  nav.querySelectorAll("button").forEach(b => b.addEventListener("click", () => go(+b.dataset.k)));
+}
+
+function emailRecord(key) {
+  const e = emailOf(key), st = emState(key), q1 = W.a[`${key}_q1`], q2 = W.a[`${key}_q2`];
+  const r = W.arm === "concept" ? conceptDecision(e, st) : null;
+  return { stim_id: e.id, truth: e.truth, planted_error: e.planted, before: q1 === undefined ? null : +q1 - 1, conf_before: W.a[`${key}_c1`] ? +W.a[`${key}_c1`] : null,
+    after: q2 === undefined ? null : +q2 - 1, conf_after: W.a[`${key}_c2`] ? +W.a[`${key}_c2`] : null,
+    ai_decision_shown: e.ai.concept.decision, flips: Object.keys(st.flips).filter(k => st.flips[k]),
+    ...(r ? { ai_decision_final: r.changed ? r.dec : e.ai.concept.decision } : {}) };
+}
+function renderRecord() {
+  const sus = SUS.map((_, k) => W.a["s" + k] ? +W.a["s" + k] : null);
+  const ac = sus[D.ac_index], susItems = sus.filter((_, k) => k !== D.ac_index);
+  const susScore = susItems.every(v => v) ? (susItems.reduce((t, v) => t + v, 0) / susItems.length - 1) / 4 * 100 : null;
+  const rec = { arm: W.arm, pre: Object.fromEntries(BG.map(b => [b[1], W.a[b[1]] ?? null])),
+    practice: emailRecord("practice"), emails: [emailRecord("e1"), emailRecord("e2")], sus: susItems, attention_ok: ac === 1,
+    expl: XQ.map((_, k) => W.a["x" + k] ? +W.a["x" + k] : null),
+    compare: { stim_id: W.e2.id, prefer: W.a.prefer ? ["posthoc", "concepts", "same"][W.a.prefer - 1] : null, why: W.a.prefer_why || "" },
+    post: { trust: W.a.trust_post ? +W.a.trust_post : null, conf: W.a.conf_post ? +W.a.conf_post : null, like: W.a.like || "", concern: W.a.concern || "", disagree: W.a.disagree || null } };
+  const [c, p] = rec.emails;
+  const ok = (r, k) => r[k] === null ? "—" : (r[k] === r.truth ? "correct" : "wrong");
+  const expl = rec.expl.every(v => v) ? (rec.expl.reduce((a, b) => a + b, 0) / 3).toFixed(2) : "—";
+  const dtrust = rec.post.trust && W.a.trust_pre ? (rec.post.trust - +W.a.trust_pre) : null;
+  const tiles = [
+    [ok(p, "after"), "planted error after the AI (primary)"],
+    [p.after === null ? "—" : (p.before === p.truth && p.after !== p.truth ? "yes" : "no"), "over-relied: right before, wrong after"],
+    [`${ok(c, "before")} → ${ok(c, "after")}`, "AI-correct email, before → after"],
+    [susScore === null ? "—" : susScore.toFixed(1), "usability (0–100)"],
+    [W.a.prefer ? ["highlighted words", "warning signs", "no difference"][W.a.prefer - 1] : "—", "preferred explanation"],
+    [ac == null ? "—" : (ac === 1 ? "passed" : "failed → excluded"), "attention check"],
+    [expl, "explanation quality (1–5)"],
+    [dtrust === null ? "—" : (dtrust > 0 ? "+" : "") + dtrust, "trust in AI, after − before"],
+    [W.arm === "concept" ? String(p.flips.length) : "n/a", "\"I disagree\" flips on the planted error"],
+  ];
+  return `<h2>What gets recorded</h2>
+    <p class="claim">The measures computed from your answers, then the response file the app saves for this session (arm: ${esc(ARMS.find(a => a[0] === W.arm)[1])}).</p>
+    <div class="rec">${tiles.map(([b, s]) => `<div><b>${esc(b)}</b><span>${esc(s)}</span></div>`).join("")}</div>
+    <pre class="json">${esc(JSON.stringify(rec, null, 1))}</pre>`;
+}
+
+function setArm(a) {
+  W.arm = a; Object.values(W.em).forEach(st => { st.flips = {}; });  // keep the AI panel open; corrections belong to one arm
+  document.querySelectorAll("tr.armrow").forEach(r => r.setAttribute("aria-selected", r.dataset.k === a));
+  renderScreen();
+}
+const onActivate = (el, fn) => { el.addEventListener("click", fn); el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } }); };
+const toTake = () => document.getElementById("take").scrollIntoView();
+document.getElementById("armtable").innerHTML = ARMS.map(([k, l, see, model, corr]) =>
+  `<tr class="armrow" data-k="${k}" tabindex="0" aria-selected="${k === W.arm}"><td><b>${esc(l)}</b></td><td>${esc(see)}</td><td>${esc(model)}</td><td>${esc(corr)}</td></tr>`).join("");
+document.querySelectorAll("tr.armrow").forEach(r => onActivate(r, () => { setArm(r.dataset.k); toTake(); }));
+
+document.getElementById("flow").innerHTML = SC.filter(s => s.d).map((s, k) =>
+  `<button class="step ${s.loop ? "loop" : ""}" data-k="${SC.indexOf(s)}"><span class="n">${k + 1} · ${esc(s.time)}</span><b>${esc(s.t)}</b><span>${esc(s.d)}</span></button>`).join("");
+document.querySelectorAll("#flow .step").forEach(b => b.addEventListener("click", () => { go(+b.dataset.k); toTake(); }));
+
+function renderPool() {
+  const plain = n => n.replace(/_/g, " ").toLowerCase();
+  document.getElementById("pooltable").innerHTML = `<thead><tr><th>Email</th><th>Subject</th><th>Truth</th><th>AI shows</th><th>Signs present (concept arm)</th><th>In walkthrough</th></tr></thead><tbody>` +
+    D.pool.map(e => {
+      const sel = e === W.e1 || e === W.e2;
+      return `<tr class="poolrow" data-id="${e.id}" tabindex="0" aria-selected="${sel}"><td><code>${e.id}</code></td><td>${esc(e.text.split("\n")[0].replace(/^Subject: /, "").slice(0, 70))}</td>
+      <td>${e.truth ? '<span class="pill phish">malicious</span>' : '<span class="pill legit">legitimate</span>'}</td>
+      <td>${e.planted ? '<span class="pill err">legitimate · planted</span>' : (e.ai.concept.decision ? '<span class="pill phish">malicious</span>' : '<span class="pill legit">legitimate</span>')}</td>
+      <td>${e.ai.concept.checklist.filter(x => x.present).map(x => `<span class="chip">${plain(x.concept)}</span>`).join("") || "<span class='chip'>none</span>"}</td>
+      <td>${sel ? `<b>email ${e === W.e1 ? 1 : 2}</b>` : `<span class="note">use as email ${e.planted ? 2 : 1}</span>`}</td></tr>`;
+    }).join("") + `</tbody>`;
+  document.querySelectorAll("tr.poolrow").forEach(r => onActivate(r, () => {
+    const e = D.pool.find(x => x.id === r.dataset.id);
+    const slot = e.planted ? "e2" : "e1";
+    W[slot] = e; delete W.em[slot];
+    ["q1", "c1", "q2", "c2"].forEach(q => delete W.a[`${slot}_${q}`]);  // answers belong to the email they were given for
+    renderPool(); go(SC.findIndex(s => s.email === (e.planted ? "e2" : "e1"))); toTake();
+  }));
+}
+
+function Phi(x) { const t = 1 / (1 + 0.2316419 * Math.abs(x)), d = 0.3989423 * Math.exp(-x * x / 2);
+  const p = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274)))); return x > 0 ? 1 - p : p; }
+function power(p1, p2, n, z = 2.2414) { const se = Math.sqrt((p1 * (1 - p1) + p2 * (1 - p2)) / n); return se ? Phi(Math.abs(p1 - p2) / se - z) : 0; }
+function calc() {
+  const v = id => +document.getElementById(id).value;
+  const ps = v("c-score") / 100, pp = v("c-post") / 100, pc = v("c-conc") / 100, n = v("c-n"), ex = v("c-ex") / 100;
+  [["o-score", ps], ["o-post", pp], ["o-conc", pc]].forEach(([id, x]) => document.getElementById(id).textContent = Math.round(100 * x) + "%");
+  document.getElementById("o-n").textContent = n; document.getElementById("o-ex").textContent = Math.round(100 * ex) + "%";
+  const a = power(ps, pc, n), b = power(pp, pc, n);
+  [["p1", a], ["p2", b]].forEach(([id, x]) => { document.getElementById(id).style.width = (100 * x) + "%"; document.getElementById(id + "v").textContent = x.toFixed(2); });
+  const analysed = 3 * n, recruit = Math.ceil(analysed / (1 - ex) / 10) * 10, older = Math.round(0.4 * recruit);
+  document.getElementById("c-out").innerHTML = [[analysed, "analysed (3 arms)"], [recruit, "to recruit"], [older, "of them aged 65+"], ["£" + Math.round(recruit * 1.7).toLocaleString("en-GB"), "participant pay at £1.70"]]
+    .map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join("");
+  document.getElementById("st-recruit").textContent = recruit;
+  document.getElementById("st-recruit-l").textContent = `recruited · ${analysed} analysed`;
+}
+["c-score", "c-post", "c-conc", "c-n", "c-ex"].forEach(id => document.getElementById(id).addEventListener("input", calc));
+
+// ---------------------------------------------------------------- CBM explainer
+// example: the malicious email (AI correct) whose label flips after switching off the fewest concepts
+function flipSet(e) {
+  // switches that push hardest toward "legitimate": turning off present risk signs, turning on absent benign signs
+  const moves = numberedSigns(e, {}).map(x => ({ x, gain: x.on ? x.weight : -x.weight })).filter(m => m.gain > 0)
+    .sort((p, q) => q.gain - p.gain), fl = {};
+  for (let k = 0; k < moves.length; k++) { fl[moves[k].x.concept] = true;
+    if (conceptDecision(e, { flips: fl }).dec !== e.ai.concept.decision) return moves.slice(0, k + 1).map(m => m.x); }
+  return null;
+}
+const cands = D.pool.filter(e => !e.planted && e.truth === 1 && e.ai.concept.decision === 1).map(e => ({ e, set: flipSet(e) }));
+const best = cands.filter(x => x.set).sort((p, q) => p.set.length - q.set.length || p.e.text.length - q.e.text.length)[0] || cands[0];
+const CBM = { e: best.e, hint: best.set || [], flips: {} };
+function renderCBM() {
+  const e = CBM.e, c = e.ai.concept, signs = numberedSigns(e, CBM.flips);
+  document.getElementById("cbm-x1").innerHTML = esc(e.text);
+  document.getElementById("cbm-y1").innerHTML = verdict(e.ai.score_only.decision, e.ai.score_only.prob) + `<p class="note">Why? The model cannot say.</p>`;
+  document.getElementById("cbm-x2").innerHTML = linkedText(e, CBM.flips);
+  document.getElementById("cbm-c").innerHTML = signs.map(x => `<button class="crow ${x.on ? "" : "off"} ${CBM.flips[x.concept] ? "changed" : ""}" data-c="${esc(x.concept)}" data-n="${x.n || ""}" aria-pressed="${x.on}">
+      <span>${x.n ? `<span class="cb c${(x.n - 1) % 8}">${x.n}</span>` : "–"}</span><span>${esc(x.on ? x.plain_present : x.plain_absent)}</span>
+      <span class="w">${x.on ? (x.weight >= 0 ? "+" : "") + x.weight.toFixed(2) : "0"}</span></button>`).join("");
+  const r = conceptDecision(e, { flips: CBM.flips }), lt = c.logit_terms;
+  const terms = signs.filter(x => x.on).map(x => (x.weight >= 0 ? "+ " : "− ") + Math.abs(x.weight).toFixed(2)
+    + ` <span class="cb c${(x.n - 1) % 8}">${x.n}</span> ${esc(x.plain_present.split(" ").slice(0, 4).join(" "))}…`);
+  const total = lt.bias + lt.residual + signs.filter(x => x.on).reduce((t, x) => t + x.weight, 0);
+  document.getElementById("cbm-y2").innerHTML = (r.dec ? `<span class="verdict bad">phishing or harmful spam</span>` : `<span class="verdict good">legitimate</span>`)
+    + `<div class="sum">score = ${lt.bias.toFixed(2)} (base)<br>${terms.join("<br>") || "(no concepts present)"}<br>= <b>${total.toFixed(2)}</b> ${total >= lt.threshold ? "≥" : "<"} ${lt.threshold.toFixed(2)} (threshold)</div>`
+    + `<p class="note">${r.changed ? "The label was recomputed from your concepts." : "Each present concept adds its weight."}${CBM.hint.length
+        ? ` Try: switch ${CBM.hint.map(x => `${x.on ? "off" : "on"} <b>“${esc(x.on ? x.plain_present : x.plain_present)}”</b>`).join(" and ")}, and the label flips to legitimate.` : ""}</p>`;
+  document.querySelectorAll("#cbm-c .crow").forEach(b => {
+    b.addEventListener("click", () => { CBM.flips[b.dataset.c] = !CBM.flips[b.dataset.c]; renderCBM(); });
+    if (b.dataset.n) {
+      const marks = () => document.querySelectorAll(`#cbm-x2 .cm[data-n~="${b.dataset.n}"]`);
+      b.addEventListener("mouseenter", () => marks().forEach(m => m.classList.add("hl")));
+      b.addEventListener("mouseleave", () => marks().forEach(m => m.classList.remove("hl")));
+    }
+  });
+}
+renderCBM();
+
+renderPool();
+renderScreen();
+calc();
+</script>
+
+</body>
+</html>
