@@ -90,6 +90,7 @@ tr.armrow[aria-selected="true"] td, tr.poolrow[aria-selected="true"] td { backgr
 .wt-nav button[aria-current="step"] { background: var(--surface); border-color: var(--line); color: var(--ink); font-weight: 600; }
 .wt-nav .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); flex: none; }
 .wt-nav .dot.ok { background: var(--legit); }
+#wt-screen { scroll-margin-top: 16px; }
 .screen { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
 .screen-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
 .measures { font: 500 11px/1.4 var(--mono); color: var(--ink-3); }
@@ -371,7 +372,7 @@ const TRUST5 = ["Very distrusting", "Distrusting", "Neutral", "Trusting", "Very 
 const LIK5 = ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"];
 const correctPool = D.pool.filter(e => !e.planted), plantedPool = D.pool.filter(e => e.planted);
 
-const W = { arm: "concept", i: 0, a: {}, e1: correctPool.find(e => e.truth === 1) || correctPool[0], e2: plantedPool[plantedPool.length - 1], em: {} };
+const W = { arm: "concept", i: 0, a: {}, seen: new Set(), e1: correctPool.find(e => e.truth === 1) || correctPool[0], e2: plantedPool[plantedPool.length - 1], em: {} };
 const emState = key => W.em[key] || (W.em[key] = { shown: false, flips: {} });
 
 const BG = [
@@ -403,6 +404,9 @@ const SC = [
 ];
 const answered = k => W.a[k] !== undefined && W.a[k] !== "" && W.a[k] !== false;
 const complete = s => s.req.every(answered);
+const allComplete = () => SC.every(complete);
+const screenDone = (s, k) => s.req.length ? complete(s)
+  : s.id === "record" && canSend() ? !!SEND.sent : W.seen.has(k);
 
 const radios = (name, opts, cls = "opts") => `<div class="${cls}" role="radiogroup">` + opts.map((o, k) =>
   `<label><input type="radio" name="${name}" value="${k + 1}" ${W.a[name] == k + 1 ? "checked" : ""}>${esc(o)}</label>`).join("") + `</div>`;
@@ -552,8 +556,10 @@ function renderScreen() {
     <div class="wt-foot"><button class="btn ghost" id="wt-back" ${W.i === 0 ? "disabled" : ""}>Back</button>
       <span class="note" id="wt-hint"></span>
       ${W.i < SC.length - 1 ? `<button class="btn" id="wt-next">${s.id === "debrief" ? "See the record" : "Next"}</button>` : `<button class="btn ghost" id="wt-reset">Start again</button>`}</div>`;
+  W.seen.add(W.i);
   bindScreen();
   updateNext();
+  autoSend();
 }
 function updateNext() {
   const s = SC[W.i], nx = document.getElementById("wt-next"), hint = document.getElementById("wt-hint");
@@ -592,12 +598,17 @@ function bindScreen() {
 
   const bk = document.getElementById("wt-back"); if (bk) bk.addEventListener("click", () => go(W.i - 1));
   const nx = document.getElementById("wt-next"); if (nx) nx.addEventListener("click", () => go(W.i + 1));
-  const rs = document.getElementById("wt-reset"); if (rs) rs.addEventListener("click", () => { W.a = {}; W.em = {}; W.started = null; SEND.msg = ""; SEND.cls = ""; SEND.sent = 0; go(0); });
+  const rs = document.getElementById("wt-reset"); if (rs) rs.addEventListener("click", () => { W.a = {}; W.em = {}; W.started = null; W.seen = new Set(); go(0); });
 }
-function go(i) { W.i = Math.max(0, Math.min(SC.length - 1, i)); renderScreen(); }
+function go(i) {
+  W.i = Math.max(0, Math.min(SC.length - 1, i)); renderScreen();
+  // screens differ in height: without this a shorter screen leaves the viewport further down the page
+  const el = document.getElementById("wt-screen"), top = el.getBoundingClientRect().top;
+  if (top < 0 || top > innerHeight * 0.5) el.scrollIntoView({ block: "start" });
+}
 function renderNav() {
   const nav = document.getElementById("wt-nav");
-  nav.innerHTML = SC.map((s, k) => `<button data-k="${k}" ${k === W.i ? 'aria-current="step"' : ""}><span class="dot ${s.req.length && complete(s) ? "ok" : ""}"></span>${esc(s.t)}</button>`).join("");
+  nav.innerHTML = SC.map((s, k) => `<button data-k="${k}" ${k === W.i ? 'aria-current="step"' : ""}><span class="dot ${screenDone(s, k) ? "ok" : ""}"></span>${esc(s.t)}</button>`).join("");
   nav.querySelectorAll("button").forEach(b => b.addEventListener("click", () => go(+b.dataset.k)));
 }
 
@@ -650,48 +661,75 @@ function renderRecord() {
 // receiver (a Google Apps Script web app that appends one row per submission to a Google Sheet;
 // v3/src/stage3/receiver/). Inside claude.ai a page cannot reach outside servers, so there the
 // viewer downloads or copies the JSON instead. Set RESPONSE_ENDPOINT to the web app's /exec URL.
-const PAGE_VERSION = "study-page-v8";
+const PAGE_VERSION = "study-page-v9";
 const RESPONSE_ENDPOINT = "https://script.google.com/macros/s/AKfycbyp604RUmBxsJmr9oUDWyyaWyggByHNX6k__uhEkdkvaTeQ7O8byXsC-fG-aN6SJnOb/exec";
-const SEND = { msg: "", cls: "", sent: 0, dl: null, inClaude: !!(window.claude && window.claude.use) };
+const SENT_KEY = "cbm_study_sent";
+const store = { get: k => { try { return localStorage.getItem(k); } catch (e) { return null; } },
+                set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
+const SEND = { msg: "", cls: "", sent: !!store.get(SENT_KEY), busy: false, failed: false, dl: null,
+               id: "sub-" + crypto.getRandomValues(new Uint32Array(2)).join(""), inClaude: !!(window.claude && window.claude.use) };
 if (SEND.inClaude) claude.use("downloads").then(d => { SEND.dl = d; if (SC[W.i].id === "record") renderScreen(); });
 function anonId() {  // random, per browser; never personal data
-  try { let id = localStorage.getItem("cbm_study_anon_id"); if (!id) { id = "anon-" + crypto.getRandomValues(new Uint32Array(2)).join(""); localStorage.setItem("cbm_study_anon_id", id); } return id; }
-  catch (e) { return "anon-" + Math.random().toString(36).slice(2); }
+  let id = store.get("cbm_study_anon_id");
+  if (!id) { id = "anon-" + crypto.getRandomValues(new Uint32Array(2)).join(""); store.set("cbm_study_anon_id", id); }
+  return id;
 }
 const canSend = () => !SEND.inClaude && /^https:\/\//.test(RESPONSE_ENDPOINT);
 function payload() {
-  return { schema: "cbm-study-response/1", source: "protocol-page", participant: anonId(),
+  return { schema: "cbm-study-response/1", source: "protocol-page", participant: anonId(), submission_id: SEND.id,
            submitted_at: new Date().toISOString(), ...buildRecord().rec };
 }
+function sendState() {
+  if (SEND.sent) return ["Your answers have been recorded. Thank you!", "ok"];
+  if (SEND.busy) return ["Sending your answers…", ""];
+  if (SEND.failed) return ["Could not send your answers. Check your connection and press Try again.", "bad"];
+  if (!allComplete()) return ["Your answers are sent automatically once every screen is complete (green dot).", ""];
+  return ["", ""];
+}
 function saveBox() {
-  const send = canSend();
-  const why = send ? "Your answers are sent anonymously to the research team (no name or email is collected)."
-    : SEND.inClaude ? "This preview cannot send answers. Download or copy them instead."
+  if (canSend()) {
+    const [msg, cls] = sendState();
+    return `<div class="save"><b>Your answers</b><span class="note">They are sent anonymously to the research team, once (no name or email is collected).</span>
+      <div class="row">${SEND.failed && !SEND.busy && !SEND.sent ? `<button class="btn" id="rec-submit">Try again</button>` : ""}
+        <button class="btn ghost" id="rec-copy">Copy my answers (JSON)</button>
+        <span class="status ${SEND.msg ? SEND.cls : cls}" id="rec-status" role="status">${esc(SEND.msg || msg)}</span></div></div>`;
+  }
+  const why = SEND.inClaude ? "This preview cannot send answers. Download or copy them instead."
     : "Sending is not set up on this copy of the page. Download or copy your answers instead.";
-  return `<div class="save"><b>Send your answers</b><span class="note">${esc(why)}</span>
-    <div class="row">${send ? `<button class="btn" id="rec-submit">${SEND.sent ? "Send again" : "Send my answers"}</button>` : ""}
-      ${SEND.dl ? `<button class="btn ${send ? "ghost" : ""}" id="rec-download">Download my answers (JSON)</button>` : ""}
+  return `<div class="save"><b>Your answers</b><span class="note">${esc(why)}</span>
+    <div class="row">${SEND.dl ? `<button class="btn" id="rec-download">Download my answers (JSON)</button>` : ""}
       <button class="btn ghost" id="rec-copy">Copy my answers (JSON)</button>
       <span class="status ${SEND.cls}" id="rec-status" role="status">${esc(SEND.msg)}</span></div></div>`;
 }
 function setStatus(msg, cls = "") { SEND.msg = msg; SEND.cls = cls; const el = document.getElementById("rec-status"); if (el) { el.textContent = msg; el.className = "status " + cls; } }
+function refreshSend() { SEND.msg = ""; if (SC[W.i].id === "record") renderScreen(); else renderNav(); }
+// Sent automatically when the participant reaches the debrief with every screen complete. Once sent,
+// this browser never sends again (also after "Start again" or a reload), so no duplicate rows.
+function autoSend() {
+  if (canSend() && !SEND.sent && !SEND.busy && !SEND.failed && W.i >= SC.findIndex(s => s.id === "debrief") && allComplete()) submitRecord();
+}
+async function post(body, opts = {}) {
+  // text/plain avoids a CORS preflight, which Apps Script web apps do not answer
+  return fetch(RESPONSE_ENDPOINT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body, ...opts });
+}
 async function submitRecord() {
-  const btn = document.getElementById("rec-submit"); if (btn) btn.disabled = true;
-  const body = JSON.stringify(payload());
-  setStatus("Sending…");
-  try {
-    // text/plain avoids a CORS preflight, which Apps Script web apps do not answer
-    const r = await fetch(RESPONSE_ENDPOINT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || j.ok === false) throw new Error(j.error || r.status);
-    SEND.sent++; setStatus("Sent. Thank you!", "ok");
-  } catch (e) {
-    try {  // response unreadable (e.g. blocked redirect): deliver without reading the reply
-      await fetch(RESPONSE_ENDPOINT, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body });
-      SEND.sent++; setStatus("Sent. Thank you!", "ok");
-    } catch (e2) { setStatus("Could not send. Check your connection and try again, or download your answers.", "bad"); }
+  if (SEND.sent || SEND.busy) return;
+  SEND.busy = true; SEND.failed = false; refreshSend();
+  const body = JSON.stringify(payload());  // one body, one submission_id, for every attempt
+  let ok = false;
+  for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+    if (attempt) await new Promise(r => setTimeout(r, 1500 * attempt));
+    try {
+      const r = await post(body), j = await r.json().catch(() => ({}));
+      ok = r.ok && j.ok !== false;
+    } catch (e) {
+      try { await post(body, { mode: "no-cors" }); ok = true; }  // reply unreadable (blocked redirect): deliver without reading it
+      catch (e2) {}
+    }
   }
-  if (btn) { btn.disabled = false; btn.textContent = "Send again"; }
+  SEND.busy = false; SEND.sent = ok; SEND.failed = !ok;
+  if (ok) store.set(SENT_KEY, SEND.id);
+  refreshSend();
 }
 async function downloadJSON(filename, data) {
   try { const r = await SEND.dl.save({ filename, data }); if (r && r.status === "saved") setStatus("File saved.", "ok"); }
