@@ -651,7 +651,7 @@ function renderRecord() {
 // v3/src/stage3/receiver/). Inside claude.ai a page cannot reach outside servers, so there the
 // viewer downloads or copies the JSON instead. Set RESPONSE_ENDPOINT to the web app's /exec URL.
 const PAGE_VERSION = "study-page-v8";
-const RESPONSE_ENDPOINT = "";
+const RESPONSE_ENDPOINT = "https://script.google.com/macros/s/AKfycbyp604RUmBxsJmr9oUDWyyaWyggByHNX6k__uhEkdkvaTeQ7O8byXsC-fG-aN6SJnOb/exec";
 const SEND = { msg: "", cls: "", sent: 0, dl: null, inClaude: !!(window.claude && window.claude.use) };
 if (SEND.inClaude) claude.use("downloads").then(d => { SEND.dl = d; if (SC[W.i].id === "record") renderScreen(); });
 function anonId() {  // random, per browser; never personal data
