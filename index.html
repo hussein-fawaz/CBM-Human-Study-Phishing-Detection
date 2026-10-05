@@ -150,6 +150,10 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--
 .cta { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: var(--bg); text-decoration: none; font-weight: 600;
   padding: 10px 16px; border-radius: 8px; }
 .cta:hover { filter: brightness(1.08); }
+.cta-row { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+.mini { display: flex; align-items: baseline; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; }
+.mini b { font: 500 17px/1.2 var(--mono); font-variant-numeric: tabular-nums; }
+.mini span { color: var(--ink-2); font-size: 13px; }
 .cta:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
 .save { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--surface); }
@@ -214,13 +218,12 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--
     <div class="eyebrow">CBM-SE v3 · Stage 3 · Human study protocol · draft</div>
     <h1>Can people catch the model's mistakes when they see its concepts?</h1>
     <p class="lede">An online study for a concept bottleneck model. Each participant judges 2 real emails, before and after seeing an AI assessment. Three groups see the AI in three ways, and one of the two answers is deliberately wrong. The main question is whether showing the concepts behind a decision helps people notice and correct that error.</p>
-    <p><a class="cta" href="#take">Take the study yourself <span aria-hidden="true">↓</span></a></p>
+    <div class="cta-row">
+      <a class="cta" href="#take">Take the study yourself <span aria-hidden="true">↓</span></a>
+      <div class="mini"><b>2</b><span>emails per person</span></div>
+      <div class="mini"><b>≤ 10 min</b><span>per session</span></div>
+    </div>
   </header>
-
-  <div class="stats">
-    <div class="stat"><b>2</b><span>emails per person</span></div>
-    <div class="stat"><b>≤ 10 min</b><span>per session</span></div>
-  </div>
 
   <section id="cbm">
     <h2>What is a concept bottleneck model?</h2>
