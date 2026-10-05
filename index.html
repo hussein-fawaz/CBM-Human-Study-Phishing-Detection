@@ -35,8 +35,8 @@ h1 { font: 650 clamp(28px, 4vw, 40px)/1.12 var(--display); margin: 0; text-wrap:
 h2 { font: 650 22px/1.25 var(--display); margin: 0; text-wrap: balance; }
 h3 { font: 600 15px/1.3 var(--body); margin: 0; }
 p { margin: 0; }
-.lede { color: var(--ink-2); max-width: 70ch; }
-.claim { color: var(--ink-2); max-width: 72ch; }
+.lede { color: var(--ink-2); max-width: none; }
+.claim { color: var(--ink-2); max-width: none; }
 section { display: grid; gap: 16px; min-width: 0; scroll-margin-top: 16px; }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
 .scroll { overflow-x: auto; }
@@ -218,11 +218,8 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--
   </header>
 
   <div class="stats">
-    <div class="stat"><b>3</b><span>between-subject arms</span></div>
     <div class="stat"><b>2</b><span>emails per person</span></div>
     <div class="stat"><b>≤ 10 min</b><span>per session</span></div>
-    <div class="stat"><b id="st-recruit">300</b><span id="st-recruit-l">recruited · 270 analysed</span></div>
-    <div class="stat"><b>40%</b><span>aged 65+ (oversampled)</span></div>
   </div>
 
   <section id="cbm">
@@ -231,7 +228,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--
     <div class="explain-steps">
       <div><b>x · the email.</b> The raw text, the same input as any classifier.</div>
       <div><b>c · the concepts.</b> 10 yes/no warning signs predicted from the email, each with a quote as evidence. This is the "bottleneck".</div>
-      <div><b>y · the label.</b> Phishing or legitimate, computed only from c: a weighted sum of the signs that are present.</div>
+      <div><b>y · the label.</b> Phishing or legitimate, computed only from c, the signs that are present.</div>
     </div>
     <div class="panel" style="display:grid;gap:18px">
       <div style="display:grid;gap:8px">
@@ -271,7 +268,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--
     </div>
   </section>
 
-  <section>
+  <section hidden>
     <h2>One session, step by step</h2>
     <p class="claim">Every participant goes through the same screens. Only the AI panel differs between arms. Click a step to open it in the walkthrough below.</p>
     <div class="flow" id="flow"></div>
@@ -301,8 +298,7 @@ ul.plain { margin: 0; padding-left: 18px; display: grid; gap: 6px; color: var(--
   <section id="pool">
     <h2>The email pool</h2>
     <p class="claim">8 emails: 3 legitimate and 3 malicious where the AI is right, plus 2 malicious emails where the AI is made to say "legitimate". Each participant gets 1 AI-correct email and 1 planted error, drawn at random, in random order. Click a row to use it in the walkthrough: AI-correct emails become email 1, planted errors become email 2.</p>
-    <div class="panel scroll"><table id="pooltable"></table>
-      <p class="note">Draft pool, built from the v3.3 model; it still shows HIGH_RISK_PRODUCT, which v3.4 retires. Every email is a different campaign, at most 1,200 characters, with link paths masked as <code>/xxxx</code>. Planted errors switch off concepts that really are present in the email (confirmed by the annotation), so a participant can see the claim is false.</p></div>
+    <div class="panel scroll"><table id="pooltable"></table></div>
   </section>
 
   <!-- Who takes part: kept for reference, hidden from viewers. -->
@@ -792,8 +788,9 @@ function calc() {
   const analysed = 3 * n, recruit = Math.ceil(analysed / (1 - ex) / 10) * 10, older = Math.round(0.4 * recruit);
   document.getElementById("c-out").innerHTML = [[analysed, "analysed (3 arms)"], [recruit, "to recruit"], [older, "of them aged 65+"], ["£" + Math.round(recruit * 1.7).toLocaleString("en-GB"), "participant pay at £1.70"]]
     .map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join("");
-  document.getElementById("st-recruit").textContent = recruit;
-  document.getElementById("st-recruit-l").textContent = `recruited · ${analysed} analysed`;
+  const stR = document.getElementById("st-recruit"), stL = document.getElementById("st-recruit-l");
+  if (stR) stR.textContent = recruit;
+  if (stL) stL.textContent = `recruited · ${analysed} analysed`;
 }
 ["c-score", "c-post", "c-conc", "c-n", "c-ex"].forEach(id => document.getElementById(id).addEventListener("input", calc));
 
